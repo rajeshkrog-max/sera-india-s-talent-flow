@@ -90,7 +90,7 @@ export function CandidateHome({ action, onSection }: { action: Action; onSection
       </section>
 
       <div className="grid gap-5 md:grid-cols-3">
-        <MiniCard title="My progress" value={candidateStages[store.stepIndex]} note="Current milestone" onClick={() => onSection("workflow")} />
+        <MiniCard title="My progress" value={candidateStages[store.stepIndex] ?? "Profile"} note="Current milestone" onClick={() => onSection("workflow")} />
         <MiniCard title="Documents" value={`${store.docs.length} uploaded`} note="Typed and stacked" onClick={() => onSection("documents")} />
         <MiniCard title="Feedback" value={store.feedback.length ? (store.feedback[0]?.status === "accepted" ? "Received and reviewed" : "Under review") : "Share yours"} note="About YZI or an employer" onClick={() => onSection("feedback")} />
       </div>
