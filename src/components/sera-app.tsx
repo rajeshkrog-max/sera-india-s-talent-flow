@@ -26,12 +26,14 @@ import {
   LogOut,
   MessageSquare,
   MoreHorizontal,
+  Moon,
   PanelLeftClose,
   Plus,
   Send,
   Settings2,
   ShieldCheck,
   Sparkles,
+  Sun,
   UserRound,
   Users,
   X,
@@ -81,8 +83,27 @@ export function SeraApp({ initialPortal = "admin" }: { initialPortal?: Portal })
   const [showCampaignForm, setShowCampaignForm] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [toast, setToast] = useState("");
+  const [dark, setDark] = useState(false);
   const navigate = useNavigate();
   const store = useDemoStore();
+
+  useEffect(() => {
+    if (portal !== "admin") return;
+    const stored = window.localStorage.getItem("sera-admin-theme");
+    setDark(stored === "dark");
+  }, [portal]);
+
+  useEffect(() => {
+    if (portal !== "admin") return;
+    document.documentElement.classList.toggle("dark", dark);
+    return () => document.documentElement.classList.remove("dark");
+  }, [dark, portal]);
+
+  const toggleTheme = () => {
+    const next = !dark;
+    setDark(next);
+    window.localStorage.setItem("sera-admin-theme", next ? "dark" : "light");
+  };
 
   const action = (message: string) => {
     setToast(message);
@@ -143,6 +164,12 @@ export function SeraApp({ initialPortal = "admin" }: { initialPortal?: Portal })
                 <div className="font-mono text-[10px] tracking-[0.08em] text-muted-foreground">{portalMeta[portal].subtitle} · {portalMeta[portal].sentence}</div>
               </div>
               <div className="ml-auto flex items-center gap-2">
+                {portal === "admin" && (
+                  <button type="button" onClick={toggleTheme} aria-label={dark ? "Switch to day mode" : "Switch to night mode"} className="flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 font-mono text-[10px] tracking-widest text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
+                    {dark ? <Sun className="size-3.5" /> : <Moon className="size-3.5" />}
+                    {dark ? "DAY" : "NIGHT"}
+                  </button>
+                )}
                 <Link to="/" className="rounded-md border border-border px-2.5 py-1.5 font-mono text-[10px] tracking-widest text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">DEMO MAP</Link>
                 <div className="hidden h-6 w-px bg-border sm:block" />
                 <span className="hidden font-mono text-[10px] text-muted-foreground sm:block">30 AUG 2026</span>
