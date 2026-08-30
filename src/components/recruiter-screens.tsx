@@ -140,11 +140,12 @@ const emptyForm: RecruiterRequirementForm = {
   role: "", field: "", city: "", mode: "Hybrid", joiningLocation: "", accommodation: "no", exp: "", ctc: "", notice: "", heads: "1", mustSkills: [], niceSkills: [], shift: "", fillBy: "", matchFloor: "80",
 };
 
-export function RecruiterRequirements({ action }: { action: Action }) {
-  const [filing, setFiling] = useState(false);
+export function RecruiterRequirements({ action, openForm = false, onFormClosed }: { action: Action; openForm?: boolean; onFormClosed?: () => void }) {
+  const [filing, setFiling] = useState(openForm);
   const store = useRecruiterStore();
+  const closeForm = () => { setFiling(false); onFormClosed?.(); };
 
-  if (filing) return <RequirementPage onBack={() => setFiling(false)} action={action} />;
+  if (filing) return <RequirementPage onBack={closeForm} action={action} />;
 
   return (
     <div className="space-y-5">
