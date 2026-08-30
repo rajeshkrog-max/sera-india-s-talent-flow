@@ -29,6 +29,15 @@ export type JobInvite = {
   skills: string[];
   seraNote: string;
   status: "shown" | "applied" | "rejected";
+  deadline: string;
+  ctc: string;
+  joiningLocation: string;
+  accommodation: { provided: boolean; city?: string };
+  experience: string;
+  mustSkills: string[];
+  niceSkills: string[];
+  shiftBond: string;
+  domain: string;
 };
 
 export type Grievance = { id: string; reqId: string; milestone: CandidateStage; body: string; createdAt: string };
