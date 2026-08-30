@@ -400,9 +400,15 @@ export function AdminRequirementsScreen({ action }: { action: Action }) {
   );
 }
 
+const seraStages = ["Profile", "Sent", "Meeting", "Docs", "Interview", "Offer", "Placed"];
+
 export function AdminSeraControl({ action }: { action: Action }) {
   const [selected, setSelected] = useState<string | null>(null);
+  const [stageOverride, setStageOverride] = useState<Record<string, string>>({});
   const person = selected ? findPerson(selected) : undefined;
+  const currentStage = person ? (stageOverride[person.id] ?? (seraStages.includes(person.step) ? person.step : "Profile")) : "Profile";
+  const currentIndex = seraStages.indexOf(currentStage);
+  const nextStage = seraStages[currentIndex + 1];
   return (
     <div className="space-y-5">
       <Heading eyebrow="YZI ADMIN · SERA CONTROL" title="Sera is powerful because YZI is the lock." description="Pick the person first. Only then does an action unlock, and only that action is logged." />
