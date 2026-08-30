@@ -173,6 +173,19 @@ export function SeraApp({ initialPortal = "admin" }: { initialPortal?: Portal })
 
       {showRequirementForm && <RequirementModal onClose={() => setShowRequirementForm(false)} onSave={() => { setShowRequirementForm(false); action("Requirement REQ-318 saved as draft"); }} />}
       {showCampaignForm && <CampaignModal onClose={() => setShowCampaignForm(false)} onSave={() => { setShowCampaignForm(false); action("Campaign CMP-014 saved as draft"); }} />}
+      {showLogoutConfirm && (
+        <div className="fixed inset-0 z-50 grid place-items-center bg-background/70 p-4 backdrop-blur-sm">
+          <div className="sera-rise w-full max-w-sm rounded-lg border border-border bg-card p-6 shadow-2xl">
+            <div className="grid size-10 place-items-center rounded-md bg-signal-soft"><LogOut className="size-5 text-signal" /></div>
+            <h2 className="mt-4 text-base font-semibold tracking-tight">Log out of {portal === "candidate" ? "your candidate desk" : portal === "recruiter" ? "the recruiter desk" : "the admin command center"}?</h2>
+            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">Are you sure? You will return to the demo map and your desk session ends.</p>
+            <div className="mt-6 flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setShowLogoutConfirm(false)}>No, stay</Button>
+              <Button onClick={logout}>Yes, log out</Button>
+            </div>
+          </div>
+        </div>
+      )}
       {toast && <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-md bg-primary px-4 py-3 text-sm text-primary-foreground shadow-lg"><Check className="size-4 text-ok" />{toast}</div>}
     </div>
   );
