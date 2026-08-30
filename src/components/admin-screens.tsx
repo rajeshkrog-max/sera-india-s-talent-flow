@@ -205,17 +205,24 @@ function PersonCard({ person, onClick }: { person: AdminPerson; onClick: () => v
   );
 }
 
-export function AdminPoolBoard({ action }: { action: Action }) {
+export function AdminPoolBoard({ action, reqFilter }: { action: Action; reqFilter?: string }) {
   const [openId, setOpenId] = useState<string | null>(null);
   const open = openId ? findPerson(openId) : undefined;
+  const req = reqFilter ? findRequirement(reqFilter) : undefined;
+  const people = reqFilter ? adminPool.filter((person) => person.requirement === reqFilter) : adminPool;
   return (
     <div className="space-y-5">
-      <Heading eyebrow="YZI ADMIN · CANDIDATE POOL" title="Candidate pool." description="Every person sits in exactly one column. Full identity opens on the right — recruiters never see it.">
+      <Heading
+        eyebrow={req ? `MATCHES · ${req.id} · ${req.recruiter} · ${req.agency}` : "YZI ADMIN · CANDIDATE POOL"}
+        title={req ? `${req.role}, ${req.city}.` : "Candidate pool."}
+        description="Registered people only. Every person sits in exactly one column, and full identity opens on the right — recruiters never see it."
+      >
         <div className="rounded-md bg-steel-soft px-3 py-2 font-mono text-[10px] tracking-wide text-steel">POOL FIRST · CAMPAIGN IF THIN</div>
       </Heading>
       <div className="grid gap-4 md:grid-cols-3 xl:grid-cols-6">
         {poolColumns.map((column) => {
-          const people = adminPool.filter((person) => person.column === column);
+          const columnPeople = people.filter((person) => person.column === column);
+
           return (
             <section key={column} className="rounded-lg border border-border bg-muted/25 p-3">
               <div className="flex items-center justify-between">
