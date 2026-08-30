@@ -227,14 +227,15 @@ export function AdminPoolBoard({ action, reqFilter }: { action: Action; reqFilte
             <section key={column} className="rounded-lg border border-border bg-muted/25 p-3">
               <div className="flex items-center justify-between">
                 <span className="text-[11px] font-semibold uppercase tracking-wider">{column}</span>
-                <span className="font-mono text-[10px] text-muted-foreground">{people.length}</span>
+                <span className="font-mono text-[10px] text-muted-foreground">{columnPeople.length}</span>
               </div>
               <div className="mt-3 space-y-2">
-                {people.length === 0 ? (
+                {columnPeople.length === 0 ? (
                   <p className="rounded-md border border-dashed border-border px-3 py-4 text-[11px] leading-relaxed text-muted-foreground">Nobody at this stage right now.</p>
                 ) : (
-                  people.map((person) => <PersonCard key={person.id} person={person} onClick={() => setOpenId(person.id)} />)
+                  columnPeople.map((person) => <PersonCard key={person.id} person={person} onClick={() => setOpenId(person.id)} />)
                 )}
+
               </div>
             </section>
           );
