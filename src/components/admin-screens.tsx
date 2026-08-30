@@ -366,25 +366,31 @@ function Toggle({ label, note, defaultOn }: { label: string; note: string; defau
   );
 }
 
-function NewCampaignPage({ onBack, action }: { onBack: () => void; action: Action }) {
-  const [skills, setSkills] = useState([".NET", "Azure"]);
+function NewCampaignPage({ onBack, action, fromReq, backLabel }: { onBack: () => void; action: Action; fromReq?: string; backLabel?: string }) {
+  const req = fromReq ? findRequirement(fromReq) : undefined;
+  const [skills, setSkills] = useState<string[]>(req?.skills ?? [".NET", "Azure"]);
   const [draft, setDraft] = useState("");
   return (
     <div className="space-y-5">
-      <button type="button" onClick={onBack} className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground"><ArrowLeft className="size-3.5" /> All campaigns</button>
-      <Heading eyebrow="YZI ADMIN · NEW CAMPAIGN" title="Full HR brief." description="Sera only sources what this brief allows. No brief, no extraction." />
+      <button type="button" onClick={onBack} className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground"><ArrowLeft className="size-3.5" /> {backLabel ?? "All campaigns"}</button>
+      <Heading
+        eyebrow={req ? `NEW CAMPAIGN · FROM ${req.id} · ${req.recruiter} · ${req.agency}` : "YZI ADMIN · NEW CAMPAIGN · YZI IN-HOUSE"}
+        title="Full HR brief."
+        description={req ? "Pre-filled from the requirement. Add portals, ticks and dates, then start." : "Sera only sources what this brief allows. No brief, no extraction."}
+      />
       <div className="grid gap-5 xl:grid-cols-[1.4fr_1fr]">
         <section className="space-y-5 rounded-lg border border-border bg-card p-6">
           <div className="grid gap-4 sm:grid-cols-2">
-            <Labelled label="Role"><Input defaultValue="Senior .NET Engineer" /></Labelled>
-            <Labelled label="Target city"><Input defaultValue="Bengaluru" /></Labelled>
+            <Labelled label="Role"><Input defaultValue={req?.role ?? "Senior .NET Engineer"} /></Labelled>
+            <Labelled label="Target city"><Input defaultValue={req?.city ?? "Bengaluru"} /></Labelled>
             <Labelled label="Age band"><Input defaultValue="24 – 38" /></Labelled>
-            <Labelled label="Experience"><Input defaultValue="5 – 8 years" /></Labelled>
-            <Labelled label="CTC band"><Input defaultValue="₹18 – ₹28 LPA" /></Labelled>
-            <Labelled label="Notice period"><Input defaultValue="Up to 60 days" /></Labelled>
+            <Labelled label="Experience"><Input defaultValue={req?.exp ?? "5 – 8 years"} /></Labelled>
+            <Labelled label="CTC band"><Input defaultValue={req?.ctc ?? "₹18 – ₹28 LPA"} /></Labelled>
+            <Labelled label="Notice period"><Input defaultValue={req?.notice ?? "Up to 60 days"} /></Labelled>
             <Labelled label="Start date"><Input type="date" defaultValue="2026-09-01" /></Labelled>
             <Labelled label="End date"><Input type="date" defaultValue="2026-09-30" /></Labelled>
           </div>
+
           <div>
             <div className="text-xs font-medium">Skill chips</div>
             <div className="mt-2 flex flex-wrap items-center gap-2">
