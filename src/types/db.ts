@@ -111,7 +111,7 @@ export type Spec = {
   status: SpecStatus;
 };
 
-export type Workflow = { id: string; spec_id: string; step: WorkflowStep };
+export type Workflow = { id: string; spec_id: string; step: WorkflowStep; updated_at: string };
 
 export type Message = {
   id: string;
@@ -124,7 +124,7 @@ export type Message = {
   created_at: string;
 };
 
-export type Document = { id: string; candidate_id: string; name: string; url: string; shared_spec_id: string | null };
+export type Document = { id: string; candidate_id: string; name: string; url: string; kind: DocumentKind; shared_spec_id: string | null };
 
 export type IdentityRequest = {
   id: string;
