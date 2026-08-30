@@ -120,9 +120,10 @@ export function SeraApp({ initialPortal = "admin" }: { initialPortal?: Portal })
   };
 
   return (
-    <div className={cn("min-h-screen text-foreground antialiased", portal === "candidate" ? "bg-steel-soft/25" : "bg-background")}>
+    <div className="min-h-screen bg-background text-foreground antialiased">
       <div className="flex min-h-screen">
-        <aside className={cn("flex w-[248px] shrink-0 flex-col text-rail-text", portal === "candidate" ? "bg-primary" : "bg-rail")}>
+        <aside className="flex w-[248px] shrink-0 flex-col bg-rail text-rail-text">
+
           <div className="flex items-center gap-3 px-5 py-5">
             <div className="grid size-9 place-items-center rounded-md bg-rail-soft text-xs font-mono text-sidebar-primary ring-1 ring-sidebar-border">S</div>
             <div className="leading-tight">
