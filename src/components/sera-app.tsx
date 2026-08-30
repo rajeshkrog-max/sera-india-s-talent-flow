@@ -157,15 +157,15 @@ export function SeraApp({ initialPortal = "admin" }: { initialPortal?: Portal })
 
           <div className="p-5 md:p-7">
             {section === "overview" && <Overview portal={portal} store={store} action={action} onSection={setSection} onRequirement={() => setShowRequirementForm(true)} />}
-            {section === "pool" && <Pool portal={portal} store={store} action={action} />}
-            {section === "requirements" && <Requirements portal={portal} onNew={() => setShowRequirementForm(true)} action={action} />}
-            {section === "campaigns" && <Campaigns onNew={() => setShowCampaignForm(true)} action={action} />}
+            {section === "pool" && (portal === "admin" ? <AdminPoolBoard action={action} /> : <Pool portal={portal} store={store} action={action} />)}
+            {section === "requirements" && (portal === "admin" ? <AdminRequirementsScreen action={action} /> : <Requirements portal={portal} onNew={() => setShowRequirementForm(true)} action={action} />)}
+            {section === "campaigns" && <AdminCampaignsScreen action={action} />}
             {section === "workflow" && <Workflow portal={portal} store={store} action={action} />}
             {section === "documents" && <Documents action={action} />}
             {section === "profile" && <Profile action={action} />}
-            {section === "messages" && <Messages store={store} />}
+            {section === "messages" && (portal === "admin" ? <AdminMessages action={action} /> : <Messages store={store} />)}
             {section === "approvals" && <Approvals action={action} />}
-            {section === "sera" && <SeraControl action={action} />}
+            {section === "sera" && <AdminSeraControl action={action} />}
             {section === "audit" && <Audit />}
           </div>
         </main>
