@@ -110,29 +110,51 @@ function MiniCard({ title, value, note, onClick }: { title: string; value: strin
   );
 }
 
+function SpecField({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <div className="font-mono text-[10px] tracking-widest text-muted-foreground">{label}</div>
+      <div className="mt-1 text-sm font-medium">{children}</div>
+    </div>
+  );
+}
+
 function JobPanel({ invite, onClose, action }: { invite: JobInvite; onClose: () => void; action: Action }) {
   return (
     <div className="fixed inset-0 z-40 flex justify-end bg-foreground/25 backdrop-blur-[2px]" onClick={onClose}>
-      <aside className="sera-rise flex h-full w-full max-w-[440px] flex-col border-l border-border bg-card" onClick={(event) => event.stopPropagation()}>
+      <aside className="sera-rise flex h-full w-full max-w-[480px] flex-col border-l border-border bg-card" onClick={(event) => event.stopPropagation()}>
         <header className="flex items-start justify-between gap-3 border-b border-border px-6 py-5">
           <div>
             <div className="font-mono text-[10px] tracking-widest text-steel">{invite.reqId}</div>
-            <div className="mt-1.5 text-base font-semibold tracking-tight">{invite.role}</div>
-            <div className="mt-1 text-xs text-muted-foreground">{invite.city} · {invite.mode}</div>
+            <div className="mt-1.5 text-lg font-semibold tracking-tight">{invite.role}</div>
+            <div className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Clock className="size-3" /> Apply by {invite.deadline}
+            </div>
           </div>
           <button type="button" aria-label="Close" onClick={onClose} className="grid size-8 place-items-center rounded-md text-muted-foreground hover:bg-muted"><X className="size-4" /></button>
         </header>
         <div className="flex-1 space-y-6 overflow-y-auto px-6 py-5">
-          <div>
-            <div className="font-mono text-[10px] tracking-widest text-muted-foreground">SKILLS</div>
-            <div className="mt-2 flex flex-wrap gap-2">{invite.skills.map((skill) => <Tag key={skill}>{skill}</Tag>)}</div>
-          </div>
           <div className="grid grid-cols-2 gap-5">
-            <div><div className="font-mono text-[10px] tracking-widest text-muted-foreground">CITY</div><div className="mt-1 text-sm font-medium">{invite.city}</div></div>
-            <div><div className="font-mono text-[10px] tracking-widest text-muted-foreground">MODE</div><div className="mt-1 text-sm font-medium">{invite.mode}</div></div>
-            <div><div className="font-mono text-[10px] tracking-widest text-muted-foreground">NOTICE</div><div className="mt-1 text-sm font-medium">{invite.notice}</div></div>
-            <div><div className="font-mono text-[10px] tracking-widest text-muted-foreground">STATUS</div><div className="mt-1 text-sm font-medium capitalize">{invite.status}</div></div>
+            <SpecField label="CTC BAND">{invite.ctc}</SpecField>
+            <SpecField label="EXPERIENCE REQUIRED">{invite.experience}</SpecField>
+            <SpecField label="CITY">{invite.city}</SpecField>
+            <SpecField label="JOINING LOCATION">{invite.joiningLocation}</SpecField>
+            <SpecField label="WORK NATURE">{invite.mode}</SpecField>
+            <SpecField label="NOTICE EXPECTED">{invite.notice}</SpecField>
+            <SpecField label="ACCOMMODATION">
+              {invite.accommodation.provided ? `Yes · ${invite.accommodation.city}` : "Not provided"}
+            </SpecField>
+            <SpecField label="SHIFT / BOND">{invite.shiftBond}</SpecField>
           </div>
+          <div>
+            <div className="font-mono text-[10px] tracking-widest text-muted-foreground">MUST-HAVE SKILLS</div>
+            <div className="mt-2 flex flex-wrap gap-2">{invite.mustSkills.map((skill) => <Tag key={skill}>{skill}</Tag>)}</div>
+          </div>
+          <div>
+            <div className="font-mono text-[10px] tracking-widest text-muted-foreground">NICE-TO-HAVE</div>
+            <div className="mt-2 flex flex-wrap gap-2">{invite.niceSkills.map((skill) => <Tag key={skill}>{skill}</Tag>)}</div>
+          </div>
+          <SpecField label="DOMAIN">{invite.domain}</SpecField>
           <div>
             <div className="font-mono text-[10px] tracking-widest text-muted-foreground">WHY SERA MATCHED YOU</div>
             <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{invite.why}</p>
@@ -151,7 +173,7 @@ function JobPanel({ invite, onClose, action }: { invite: JobInvite; onClose: () 
               <Button variant="outline" className="flex-1" onClick={() => { candidateStore.rejectInvite(invite.id); action("Marked not for me"); onClose(); }}>Not for me</Button>
             </div>
           )}
-          <p className="text-[11px] text-muted-foreground">You never see the hiring company contact. YZI handles the desk.</p>
+          <p className="text-[11px] text-muted-foreground">You never see the hiring company name or contact. YZI handles the desk.</p>
         </footer>
       </aside>
     </div>

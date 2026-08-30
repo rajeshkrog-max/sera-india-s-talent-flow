@@ -29,6 +29,15 @@ export type JobInvite = {
   skills: string[];
   seraNote: string;
   status: "shown" | "applied" | "rejected";
+  deadline: string;
+  ctc: string;
+  joiningLocation: string;
+  accommodation: { provided: boolean; city?: string };
+  experience: string;
+  mustSkills: string[];
+  niceSkills: string[];
+  shiftBond: string;
+  domain: string;
 };
 
 export type Grievance = { id: string; reqId: string; milestone: CandidateStage; body: string; createdAt: string };
@@ -85,6 +94,15 @@ let state: State = {
       skills: [".NET", "Azure", "ASP.NET Core", "Microservices"],
       seraNote: "Sera scored 94% on stack, city and notice period.",
       status: "shown",
+      deadline: "12 Sep 2026",
+      ctc: "₹22–28 LPA",
+      joiningLocation: "Bengaluru · Outer Ring Road",
+      accommodation: { provided: false },
+      experience: "5–8 years",
+      mustSkills: [".NET 8", "ASP.NET Core", "Azure", "SQL Server"],
+      niceSkills: ["Kubernetes", "Event-driven design", "Blazor"],
+      shiftBond: "General shift · No bond",
+      domain: "Product · Fintech · 200–500 people",
     },
     {
       id: "JIN-2",
@@ -97,6 +115,15 @@ let state: State = {
       skills: [".NET", "SQL Server", "Kafka"],
       seraNote: "Sera scored 88%. Slightly higher experience band.",
       status: "shown",
+      deadline: "18 Sep 2026",
+      ctc: "₹26–32 LPA",
+      joiningLocation: "Bengaluru · Whitefield",
+      accommodation: { provided: true, city: "Bengaluru" },
+      experience: "6–9 years",
+      mustSkills: [".NET", "SQL Server", "Payment flows"],
+      niceSkills: ["Kafka", "PCI-DSS exposure", "Redis"],
+      shiftBond: "Rotational on-call · 1-year service agreement",
+      domain: "Product · Payments · 500–1000 people",
     },
     {
       id: "JIN-3",
@@ -108,6 +135,15 @@ let state: State = {
       why: "Cloud infrastructure exposure and microservice ownership.",
       skills: ["Azure", "Docker", "CI/CD"],
       seraNote: "Sera scored 81%. Relocation optional.",
+      deadline: "30 Sep 2026",
+      ctc: "₹18–24 LPA",
+      joiningLocation: "Pune · Baner (optional)",
+      accommodation: { provided: false },
+      experience: "4–7 years",
+      mustSkills: ["Azure", "Docker", "CI/CD pipelines"],
+      niceSkills: ["Terraform", "Observability stack", "Go"],
+      shiftBond: "Flexible hours · No bond",
+      domain: "SaaS · DevTools · 50–200 people",
       status: "shown",
     },
   ],
