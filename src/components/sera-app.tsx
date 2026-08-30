@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { candidates, demoStore, getSelectedCandidate, useDemoStore, type Candidate, type Portal } from "@/lib/mock-store";
 import rahulPortrait from "@/assets/rahul-mehta.jpg";
+import { CandidateDocuments, CandidateFeedback, CandidateHome, CandidateProfileScreen, CandidateProgress } from "@/components/candidate-screens";
 import { AdminApprovals, AdminCampaignsScreen, AdminMessages, AdminPoolBoard, AdminRequirementsScreen, AdminSeraControl } from "@/components/admin-screens";
 import {
   ArrowUpRight,
@@ -39,7 +40,7 @@ import {
   X,
 } from "lucide-react";
 
-type Section = "overview" | "pool" | "requirements" | "campaigns" | "workflow" | "documents" | "profile" | "messages" | "approvals" | "sera" | "audit";
+type Section = "overview" | "feedback" | "pool" | "requirements" | "campaigns" | "workflow" | "documents" | "profile" | "messages" | "approvals" | "sera" | "audit";
 
 const portalMeta: Record<Portal, { label: string; subtitle: string; sentence: string; name: string }> = {
   candidate: { label: "Candidate", subtitle: "your safe desk", sentence: "Your single safe desk to progress and get placed.", name: "Arjun Kapoor" },
@@ -50,10 +51,11 @@ const portalMeta: Record<Portal, { label: string; subtitle: string; sentence: st
 const sectionNames: Record<Portal, { id: Section; label: string; icon: typeof LayoutDashboard }[]> = {
   candidate: [
     { id: "overview", label: "Home", icon: LayoutDashboard },
-    { id: "workflow", label: "My roles", icon: BriefcaseBusiness },
+    { id: "workflow", label: "My progress", icon: BriefcaseBusiness },
     { id: "documents", label: "Documents", icon: FileText },
     { id: "profile", label: "Profile", icon: UserRound },
     { id: "messages", label: "Messages", icon: MessageSquare },
+    { id: "feedback", label: "Feedback", icon: FileCheck2 },
   ],
   recruiter: [
     { id: "overview", label: "Overview", icon: LayoutDashboard },
@@ -188,9 +190,10 @@ export function SeraApp({ initialPortal = "admin" }: { initialPortal?: Portal })
             {section === "pool" && (portal === "admin" ? <AdminPoolBoard action={action} /> : <Pool portal={portal} store={store} action={action} />)}
             {section === "requirements" && (portal === "admin" ? <AdminRequirementsScreen action={action} /> : <Requirements portal={portal} onNew={() => setShowRequirementForm(true)} action={action} />)}
             {section === "campaigns" && <AdminCampaignsScreen action={action} />}
-            {section === "workflow" && <Workflow portal={portal} store={store} action={action} />}
-            {section === "documents" && <Documents action={action} />}
-            {section === "profile" && <Profile action={action} />}
+            {section === "feedback" && <CandidateFeedback action={action} />}
+            {section === "workflow" && (portal === "candidate" ? <CandidateProgress action={action} /> : <Workflow portal={portal} store={store} action={action} />)}
+            {section === "documents" && <CandidateDocuments action={action} />}
+            {section === "profile" && <CandidateProfileScreen action={action} />}
             {section === "messages" && (portal === "admin" ? <AdminMessages action={action} /> : <Messages store={store} />)}
             {section === "approvals" && (portal === "admin" ? <AdminApprovals action={action} /> : <Approvals action={action} />)}
             {section === "sera" && <AdminSeraControl action={action} />}
@@ -228,7 +231,7 @@ function Stat({ label, value, note, tone = "neutral" }: { label: string; value: 
 }
 
 function Overview({ portal, store, action, onSection, onRequirement }: { portal: Portal; store: ReturnType<typeof useDemoStore>; action: (message: string) => void; onSection: (section: Section) => void; onRequirement: () => void }) {
-  if (portal === "candidate") return <CandidateHome store={store} onSection={onSection} />;
+  if (portal === "candidate") return <CandidateHome action={action} onSection={(next) => onSection(next as Section)} />;
   if (portal === "recruiter") return <RecruiterOverview onSection={onSection} onRequirement={onRequirement} />;
   return <AdminOverview store={store} onSection={onSection} action={action} />;
 }
