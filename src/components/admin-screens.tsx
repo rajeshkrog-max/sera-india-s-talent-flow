@@ -244,7 +244,7 @@ function PersonRow({ person, onClick, note }: { person: AdminPerson; onClick: ()
       <div className="grid size-10 shrink-0 place-items-center rounded-md bg-steel-soft font-mono text-[11px] text-steel">{person.initials}</div>
       <div className="min-w-0 flex-1">
         <div className="text-sm font-medium">{person.name}</div>
-        <div className="mt-1 truncate text-xs text-muted-foreground">{person.stack} · {person.city} · {person.experience} · {note ?? person.origin}</div>
+        <div className="mt-1 truncate text-xs text-muted-foreground">{person.stack} · {person.city} · {person.experience} · {note ?? lockChip(person)}</div>
       </div>
       <span className="hidden font-mono text-[11px] text-steel sm:block">{person.requirement}</span>
       <Chip tone={person.column === "No match" ? "signal" : "ok"}>{person.column}</Chip>
