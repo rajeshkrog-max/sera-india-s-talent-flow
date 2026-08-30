@@ -61,7 +61,7 @@ const sectionNames: Record<Portal, { id: Section; label: string; icon: typeof La
   ],
   admin: [
     { id: "overview", label: "Command center", icon: LayoutDashboard },
-    { id: "pool", label: "Pool kanban", icon: Users },
+    { id: "pool", label: "Candidate pool", icon: Users },
     { id: "campaigns", label: "Campaigns", icon: Sparkles },
     { id: "requirements", label: "Requirements", icon: ClipboardList },
     { id: "approvals", label: "Approvals", icon: FileCheck2 },
