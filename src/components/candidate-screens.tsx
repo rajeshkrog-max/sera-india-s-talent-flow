@@ -185,7 +185,7 @@ function JobPanel({ invite, onClose, action }: { invite: JobInvite; onClose: () 
 export function CandidateProgress({ action }: { action: Action }) {
   const store = useCandidateStore();
   const [ask, setAsk] = useState(false);
-  const [milestone, setMilestone] = useState<CandidateStage>(candidateStages[store.stepIndex] ?? "Profile");
+  
   const [body, setBody] = useState("");
   const current = store.stepIndex;
   const currentStage = candidateStages[current] ?? "Profile";
