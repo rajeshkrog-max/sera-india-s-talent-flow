@@ -1,4 +1,4 @@
-import { useMemo, useState, type ChangeEvent } from "react";
+import { useEffect, useMemo, useState, type ChangeEvent } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { candidates, demoStore, getSelectedCandidate, useDemoStore, type Candidate, type Portal } from "@/lib/mock-store";
 import rahulPortrait from "@/assets/rahul-mehta.jpg";
+import { AdminCampaignsScreen, AdminMessages, AdminPoolBoard, AdminRequirementsScreen, AdminSeraControl } from "@/components/admin-screens";
 import {
   ArrowUpRight,
   BarChart3,
