@@ -200,3 +200,58 @@ alter table public.messages enable row level security;
 alter table public.documents enable row level security;
 alter table public.identity_requests enable row level security;
 alter table public.audit_events enable row level security;
+
+-- ============================================================
+-- Candidate portal additions
+-- ============================================================
+
+create type document_kind as enum ('resume', 'cv', 'pan', 'aadhaar', 'voter_id', 'company_id', 'payslip', 'other');
+create type feedback_about as enum ('yzi', 'employer');
+create type feedback_status as enum ('under_review', 'accepted');
+create type job_invite_status as enum ('shown', 'applied', 'rejected');
+
+-- Every uploaded file carries a type. No untyped documents.
+alter table public.documents add column kind document_kind not null default 'other';
+
+-- Progress dates for each workflow step.
+alter table public.workflows add column updated_at timestamptz not null default now();
+
+create table public.feedback (
+  id uuid primary key default gen_random_uuid(),
+  candidate_id uuid not null references public.candidates(id) on delete cascade,
+  about feedback_about not null,
+  employer_name text,
+  body text not null,
+  status feedback_status not null default 'under_review',
+  admin_note text,
+  created_at timestamptz not null default now(),
+  reviewed_at timestamptz
+);
+
+-- Ask Sera: candidate raises a problem at a milestone.
+create table public.grievances (
+  id uuid primary key default gen_random_uuid(),
+  candidate_id uuid not null references public.candidates(id) on delete cascade,
+  req_id uuid not null references public.requirements(id) on delete cascade,
+  milestone workflow_step not null,
+  body text not null,
+  created_at timestamptz not null default now()
+);
+
+-- summary NEVER contains recruiter or agency name.
+create table public.job_invites (
+  id uuid primary key default gen_random_uuid(),
+  candidate_id uuid not null references public.candidates(id) on delete cascade,
+  req_id uuid not null references public.requirements(id) on delete cascade,
+  role text not null,
+  city text,
+  summary jsonb not null default '{}'::jsonb,
+  status job_invite_status not null default 'shown'
+);
+
+grant select, insert, update, delete on public.feedback, public.grievances, public.job_invites to authenticated;
+grant all on public.feedback, public.grievances, public.job_invites to service_role;
+
+alter table public.feedback enable row level security;
+alter table public.grievances enable row level security;
+alter table public.job_invites enable row level security;

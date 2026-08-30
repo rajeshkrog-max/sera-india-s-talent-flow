@@ -111,7 +111,7 @@ export type Spec = {
   status: SpecStatus;
 };
 
-export type Workflow = { id: string; spec_id: string; step: WorkflowStep };
+export type Workflow = { id: string; spec_id: string; step: WorkflowStep; updated_at: string };
 
 export type Message = {
   id: string;
@@ -124,7 +124,7 @@ export type Message = {
   created_at: string;
 };
 
-export type Document = { id: string; candidate_id: string; name: string; url: string; shared_spec_id: string | null };
+export type Document = { id: string; candidate_id: string; name: string; url: string; kind: DocumentKind; shared_spec_id: string | null };
 
 export type IdentityRequest = {
   id: string;
@@ -150,3 +150,28 @@ export type AuditEvent = {
 };
 
 export type SendSpecAuditMeta = { recruiter_name: string; recruiter_org: string; req_code: string };
+
+// ---------- Candidate portal ----------
+
+export type DocumentKind = "resume" | "cv" | "pan" | "aadhaar" | "voter_id" | "company_id" | "payslip" | "other";
+export type FeedbackAbout = "yzi" | "employer";
+export type FeedbackStatus = "under_review" | "accepted";
+export type JobInviteStatus = "shown" | "applied" | "rejected";
+
+export type Feedback = {
+  id: string;
+  candidate_id: string;
+  about: FeedbackAbout;
+  employer_name: string | null;
+  body: string;
+  status: FeedbackStatus;
+  admin_note: string | null;
+  created_at: string;
+  reviewed_at: string | null;
+};
+
+/** Ask Sera — candidate raises a problem at a milestone. */
+export type Grievance = { id: string; candidate_id: string; req_id: string; milestone: WorkflowStep; body: string; created_at: string };
+
+/** summary never contains recruiter or agency name. */
+export type JobInvite = { id: string; candidate_id: string; req_id: string; role: string; city: string | null; summary: Json; status: JobInviteStatus };
