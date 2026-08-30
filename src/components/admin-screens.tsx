@@ -16,7 +16,6 @@ import {
   originLine,
   poolColumns,
   reqStatusLabel,
-  type AdminApproval,
   type AdminPerson,
 } from "@/lib/admin-data";
 import { ArrowLeft, ArrowRight, Check, ChevronRight, LockKeyhole, Plus, Send, Share2, X } from "lucide-react";
