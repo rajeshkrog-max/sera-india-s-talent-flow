@@ -1,4 +1,4 @@
-import { useMemo, useState, type ChangeEvent } from "react";
+import { useEffect, useMemo, useState, type ChangeEvent } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { candidates, demoStore, getSelectedCandidate, useDemoStore, type Candidate, type Portal } from "@/lib/mock-store";
 import rahulPortrait from "@/assets/rahul-mehta.jpg";
+import { AdminCampaignsScreen, AdminMessages, AdminPoolBoard, AdminRequirementsScreen, AdminSeraControl } from "@/components/admin-screens";
 import {
   ArrowUpRight,
   BarChart3,
@@ -25,12 +26,14 @@ import {
   LogOut,
   MessageSquare,
   MoreHorizontal,
+  Moon,
   PanelLeftClose,
   Plus,
   Send,
   Settings2,
   ShieldCheck,
   Sparkles,
+  Sun,
   UserRound,
   Users,
   X,
@@ -61,7 +64,7 @@ const sectionNames: Record<Portal, { id: Section; label: string; icon: typeof La
   ],
   admin: [
     { id: "overview", label: "Command center", icon: LayoutDashboard },
-    { id: "pool", label: "Pool kanban", icon: Users },
+    { id: "pool", label: "Candidate pool", icon: Users },
     { id: "campaigns", label: "Campaigns", icon: Sparkles },
     { id: "requirements", label: "Requirements", icon: ClipboardList },
     { id: "approvals", label: "Approvals", icon: FileCheck2 },
@@ -80,8 +83,27 @@ export function SeraApp({ initialPortal = "admin" }: { initialPortal?: Portal })
   const [showCampaignForm, setShowCampaignForm] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [toast, setToast] = useState("");
+  const [dark, setDark] = useState(false);
   const navigate = useNavigate();
   const store = useDemoStore();
+
+  useEffect(() => {
+    if (portal !== "admin") return;
+    const stored = window.localStorage.getItem("sera-admin-theme");
+    setDark(stored === "dark");
+  }, [portal]);
+
+  useEffect(() => {
+    if (portal !== "admin") return;
+    document.documentElement.classList.toggle("dark", dark);
+    return () => document.documentElement.classList.remove("dark");
+  }, [dark, portal]);
+
+  const toggleTheme = () => {
+    const next = !dark;
+    setDark(next);
+    window.localStorage.setItem("sera-admin-theme", next ? "dark" : "light");
+  };
 
   const action = (message: string) => {
     setToast(message);
@@ -142,6 +164,12 @@ export function SeraApp({ initialPortal = "admin" }: { initialPortal?: Portal })
                 <div className="font-mono text-[10px] tracking-[0.08em] text-muted-foreground">{portalMeta[portal].subtitle} · {portalMeta[portal].sentence}</div>
               </div>
               <div className="ml-auto flex items-center gap-2">
+                {portal === "admin" && (
+                  <button type="button" onClick={toggleTheme} aria-label={dark ? "Switch to day mode" : "Switch to night mode"} className="flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 font-mono text-[10px] tracking-widest text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
+                    {dark ? <Sun className="size-3.5" /> : <Moon className="size-3.5" />}
+                    {dark ? "DAY" : "NIGHT"}
+                  </button>
+                )}
                 <Link to="/" className="rounded-md border border-border px-2.5 py-1.5 font-mono text-[10px] tracking-widest text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">DEMO MAP</Link>
                 <div className="hidden h-6 w-px bg-border sm:block" />
                 <span className="hidden font-mono text-[10px] text-muted-foreground sm:block">30 AUG 2026</span>
@@ -157,15 +185,15 @@ export function SeraApp({ initialPortal = "admin" }: { initialPortal?: Portal })
 
           <div className="p-5 md:p-7">
             {section === "overview" && <Overview portal={portal} store={store} action={action} onSection={setSection} onRequirement={() => setShowRequirementForm(true)} />}
-            {section === "pool" && <Pool portal={portal} store={store} action={action} />}
-            {section === "requirements" && <Requirements portal={portal} onNew={() => setShowRequirementForm(true)} action={action} />}
-            {section === "campaigns" && <Campaigns onNew={() => setShowCampaignForm(true)} action={action} />}
+            {section === "pool" && (portal === "admin" ? <AdminPoolBoard action={action} /> : <Pool portal={portal} store={store} action={action} />)}
+            {section === "requirements" && (portal === "admin" ? <AdminRequirementsScreen action={action} /> : <Requirements portal={portal} onNew={() => setShowRequirementForm(true)} action={action} />)}
+            {section === "campaigns" && <AdminCampaignsScreen action={action} />}
             {section === "workflow" && <Workflow portal={portal} store={store} action={action} />}
             {section === "documents" && <Documents action={action} />}
             {section === "profile" && <Profile action={action} />}
-            {section === "messages" && <Messages store={store} />}
+            {section === "messages" && (portal === "admin" ? <AdminMessages action={action} /> : <Messages store={store} />)}
             {section === "approvals" && <Approvals action={action} />}
-            {section === "sera" && <SeraControl action={action} />}
+            {section === "sera" && <AdminSeraControl action={action} />}
             {section === "audit" && <Audit />}
           </div>
         </main>
