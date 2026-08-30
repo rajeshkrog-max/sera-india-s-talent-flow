@@ -18,7 +18,9 @@ import {
   poolColumns,
   reqStatusLabel,
   type AdminPerson,
+  type AdminThread,
 } from "@/lib/admin-data";
+import { tagLabel, useRecruiterStore } from "@/lib/recruiter-store";
 import { ArrowLeft, ArrowRight, Check, ChevronRight, LockKeyhole, Plus, Send, Share2, X } from "lucide-react";
 
 
@@ -524,6 +526,7 @@ function NewCampaignPage({ onBack, action, fromReq, backLabel }: { onBack: () =>
 }
 
 export function AdminRequirementsScreen({ action }: { action: Action }) {
+  const { requirements: filedRequirements } = useRecruiterStore();
   const [view, setView] = useState<{ mode: "list" } | { mode: "matches"; id: string } | { mode: "campaign"; id: string }>({ mode: "list" });
 
   if (view.mode === "matches") {
@@ -543,6 +546,16 @@ export function AdminRequirementsScreen({ action }: { action: Action }) {
     <div className="space-y-5">
       <Heading eyebrow="YZI ADMIN · REQUIREMENTS" title="Recruiter paper only." description="This page holds what the hiring desks filed. Candidates live in the pool — never here." />
       <div className="overflow-hidden rounded-lg border border-border bg-card">
+        {filedRequirements.map((item) => (
+          <div key={item.id} className="flex flex-wrap items-center gap-4 border-b border-border px-5 py-4">
+            <div className="min-w-0 flex-1">
+              <div className="text-sm font-medium">{item.recruiter} · {item.agency}</div>
+              <div className="mt-1 truncate text-xs text-muted-foreground">{item.role} · {item.city} · <span className="font-mono text-steel">{item.id}</span> · filed {item.filed}</div>
+              <div className="mt-1 truncate text-[11px] text-muted-foreground">{item.mode} · {item.exp || "exp —"} · {item.ctc || "CTC —"} · {item.heads} head(s) · match floor {item.matchFloor}%{item.mustSkills.length ? ` · ${item.mustSkills.join(", ")}` : ""}</div>
+            </div>
+            <Chip tone="steel">New</Chip>
+          </div>
+        ))}
         {adminRequirements.map((item) => (
           <div key={item.id} className="flex flex-wrap items-center gap-4 border-b border-border px-5 py-4 last:border-0">
             <div className="min-w-0 flex-1">
@@ -697,7 +710,19 @@ export function AdminSeraControl({ action }: { action: Action }) {
 
 export function AdminMessages({ action }: { action: Action }) {
   const [side, setSide] = useState<"recruiter" | "candidate">("recruiter");
-  const threads = useMemo(() => adminThreads.filter((thread) => thread.side === side), [side]);
+  const { threads: recruiterInbound } = useRecruiterStore();
+  const threads = useMemo(() => {
+    const fromDesks: AdminThread[] = recruiterInbound.map((thread) => ({
+      id: thread.id,
+      side: "recruiter" as const,
+      title: `Priya Shah · Eventrics · ${thread.subject}`,
+      meta: tagLabel(thread.tag),
+      unread: 0,
+      messages: thread.messages.map((message) => ({ from: message.from, text: message.text, time: message.time })),
+    }));
+    const base = adminThreads.filter((thread) => thread.side === side);
+    return side === "recruiter" ? [...fromDesks, ...base] : base;
+  }, [side, recruiterInbound]);
   const [activeId, setActiveId] = useState(threads[0]?.id ?? "");
   const active = threads.find((thread) => thread.id === activeId) ?? threads[0];
   const [reply, setReply] = useState("");

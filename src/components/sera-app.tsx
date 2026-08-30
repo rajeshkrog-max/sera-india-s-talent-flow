@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { candidates, demoStore, getSelectedCandidate, useDemoStore, type Candidate, type Portal } from "@/lib/mock-store";
 import rahulPortrait from "@/assets/rahul-mehta.jpg";
 import { CandidateDocuments, CandidateFeedback, CandidateHome, CandidateProfileScreen, CandidateProgress } from "@/components/candidate-screens";
+import { RecruiterMessages, RecruiterPool, RecruiterRequirements } from "@/components/recruiter-screens";
 import { AdminApprovals, AdminCampaignsScreen, AdminMessages, AdminPoolBoard, AdminRequirementsScreen, AdminSeraControl } from "@/components/admin-screens";
 import {
   ArrowUpRight,
@@ -82,6 +83,7 @@ export function SeraApp({ initialPortal = "admin" }: { initialPortal?: Portal })
   const [portal, setPortal] = useState<Portal>(initialPortal);
   const [section, setSection] = useState<Section>(initialPortal === "admin" ? "overview" : "overview");
   const [showRequirementForm, setShowRequirementForm] = useState(false);
+  const [fileReq, setFileReq] = useState(false);
   const [showCampaignForm, setShowCampaignForm] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [toast, setToast] = useState("");
@@ -186,15 +188,15 @@ export function SeraApp({ initialPortal = "admin" }: { initialPortal?: Portal })
           </header>
 
           <div className="p-5 md:p-7">
-            {section === "overview" && <Overview portal={portal} store={store} action={action} onSection={setSection} onRequirement={() => setShowRequirementForm(true)} />}
-            {section === "pool" && (portal === "admin" ? <AdminPoolBoard action={action} /> : <Pool portal={portal} store={store} action={action} />)}
-            {section === "requirements" && (portal === "admin" ? <AdminRequirementsScreen action={action} /> : <Requirements portal={portal} onNew={() => setShowRequirementForm(true)} action={action} />)}
+            {section === "overview" && <Overview portal={portal} store={store} action={action} onSection={setSection} onRequirement={() => { if (portal === "recruiter") { setSection("requirements"); setFileReq(true); } else setShowRequirementForm(true); }} />}
+            {section === "pool" && (portal === "admin" ? <AdminPoolBoard action={action} /> : portal === "recruiter" ? <RecruiterPool action={action} /> : <Pool portal={portal} store={store} action={action} />)}
+            {section === "requirements" && (portal === "admin" ? <AdminRequirementsScreen action={action} /> : <RecruiterRequirements action={action} openForm={fileReq} onFormClosed={() => setFileReq(false)} />)}
             {section === "campaigns" && <AdminCampaignsScreen action={action} />}
             {section === "feedback" && <CandidateFeedback action={action} />}
             {section === "workflow" && (portal === "candidate" ? <CandidateProgress action={action} /> : <Workflow portal={portal} store={store} action={action} />)}
             {section === "documents" && <CandidateDocuments action={action} />}
             {section === "profile" && <CandidateProfileScreen action={action} />}
-            {section === "messages" && (portal === "admin" ? <AdminMessages action={action} /> : <Messages store={store} />)}
+            {section === "messages" && (portal === "admin" ? <AdminMessages action={action} /> : portal === "recruiter" ? <RecruiterMessages action={action} /> : <Messages store={store} />)}
             {section === "approvals" && (portal === "admin" ? <AdminApprovals action={action} /> : <Approvals action={action} />)}
             {section === "sera" && <AdminSeraControl action={action} />}
             {section === "audit" && <Audit />}
