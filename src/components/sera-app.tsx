@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { candidates, demoStore, getSelectedCandidate, useDemoStore, type Candidate, type Portal } from "@/lib/mock-store";
 import rahulPortrait from "@/assets/rahul-mehta.jpg";
-import { AdminCampaignsScreen, AdminMessages, AdminPoolBoard, AdminRequirementsScreen, AdminSeraControl } from "@/components/admin-screens";
+import { AdminApprovals, AdminCampaignsScreen, AdminMessages, AdminPoolBoard, AdminRequirementsScreen, AdminSeraControl } from "@/components/admin-screens";
 import {
   ArrowUpRight,
   BarChart3,
@@ -192,7 +192,7 @@ export function SeraApp({ initialPortal = "admin" }: { initialPortal?: Portal })
             {section === "documents" && <Documents action={action} />}
             {section === "profile" && <Profile action={action} />}
             {section === "messages" && (portal === "admin" ? <AdminMessages action={action} /> : <Messages store={store} />)}
-            {section === "approvals" && <Approvals action={action} />}
+            {section === "approvals" && (portal === "admin" ? <AdminApprovals action={action} /> : <Approvals action={action} />)}
             {section === "sera" && <AdminSeraControl action={action} />}
             {section === "audit" && <Audit />}
           </div>

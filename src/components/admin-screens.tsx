@@ -5,15 +5,21 @@ import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import rahulPortrait from "@/assets/rahul-mehta.jpg";
 import {
+  adminApprovals,
   adminCampaigns,
   adminPool,
   adminRequirements,
   adminThreads,
   findPerson,
+  findRequirement,
+  lockChip,
+  originLine,
   poolColumns,
+  reqStatusLabel,
   type AdminPerson,
 } from "@/lib/admin-data";
-import { ArrowLeft, Check, ChevronRight, LockKeyhole, Plus, Send, Share2, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, ChevronRight, LockKeyhole, Plus, Send, Share2, X } from "lucide-react";
+
 
 type Action = (message: string) => void;
 
@@ -48,30 +54,41 @@ export function IdentityDrawer({
   onClose,
   action,
   footer,
+  mailed,
 }: {
   person: AdminPerson;
   onClose: () => void;
   action: Action;
   footer?: "spec" | "confirm";
+  mailed?: boolean;
 }) {
   const canShareDocs = person.step === "Docs";
-  const req = adminRequirements.find((item) => item.id === person.requirement);
+  const req = findRequirement(person.requirement);
   const [showPlacement, setShowPlacement] = useState(false);
+  const [sent, setSent] = useState(false);
+  const chip = lockChip(person);
+  const locked = person.lock === "locked";
   return (
     <div className="fixed inset-0 z-40 flex justify-end bg-foreground/25 backdrop-blur-[2px]" onClick={onClose}>
       <aside className="sera-rise flex h-full w-full max-w-[460px] flex-col border-l border-border bg-card" onClick={(event) => event.stopPropagation()}>
         <header className="flex items-start justify-between gap-3 border-b border-border px-6 py-5">
           <div className="flex items-center gap-3">
             {person.id === "CAND-0417" ? (
-              <img src={rahulPortrait} alt={person.name} width={52} height={52} loading="lazy" className="size-13 size-[52px] rounded-md object-cover" />
+              <img src={rahulPortrait} alt={person.name} width={52} height={52} loading="lazy" className="size-[52px] rounded-md object-cover" />
             ) : (
               <div className="grid size-[52px] place-items-center rounded-md bg-steel-soft text-sm font-semibold text-steel">{person.initials}</div>
             )}
             <div>
               <div className="text-base font-semibold tracking-tight">{person.name}</div>
-              <div className="mt-1 text-xs text-muted-foreground">{req?.desk ?? "YZI in-house"}</div>
+              {locked || person.lock === "placed" ? (
+                <div className="mt-1 text-xs text-muted-foreground">{person.lockedRecruiter} · {person.lockedAgency}</div>
+              ) : (
+                <div className="mt-1 text-xs text-muted-foreground">Not with a recruiter yet</div>
+              )}
               <div className="mt-0.5 text-xs font-medium">{req?.role ?? "Unassigned role"} · <span className="font-mono text-[11px] text-steel">{person.requirement}</span></div>
-              <div className="mt-1 font-mono text-[10px] tracking-widest text-muted-foreground">{person.id} · {person.column.toUpperCase()}</div>
+              <div className="mt-2 flex flex-wrap gap-2">
+                <Chip tone={person.lock === "vacant" ? "ok" : person.lock === "no_match" ? "signal" : "steel"}>{chip}</Chip>
+              </div>
             </div>
           </div>
           <button type="button" aria-label="Close" onClick={onClose} className="grid size-8 place-items-center rounded-md text-muted-foreground hover:bg-muted"><X className="size-4" /></button>
@@ -85,13 +102,19 @@ export function IdentityDrawer({
             <div className="text-sm text-signal">{person.phone}</div>
           </div>
 
+          <div className="rounded-md border border-dashed border-border px-4 py-3">
+            <div className="font-mono text-[10px] tracking-widest text-muted-foreground">ORIGIN · ADMIN ONLY</div>
+            <div className="mt-1.5 text-sm">{originLine(person)}</div>
+            <p className="mt-1 text-[11px] text-muted-foreground">Origin never changes. Only the lock moves.</p>
+          </div>
+
           <div className="grid grid-cols-2 gap-5">
             <Field label="CITY" value={person.city} />
             <Field label="EXPERIENCE" value={person.experience} />
             <Field label="CTC" value={person.ctc} />
             <Field label="NOTICE" value={person.notice} />
-            <Field label="ORIGIN" value={person.origin} />
             <Field label="CURRENT STEP" value={person.step} />
+            <Field label="LOCK" value={chip} />
           </div>
 
           <div>
@@ -111,7 +134,7 @@ export function IdentityDrawer({
         </div>
 
         <footer className="space-y-2 border-t border-border px-6 py-5">
-          {person.column === "Placed" ? (
+          {person.lock === "placed" ? (
             <>
               {showPlacement && person.placement && (
                 <div className="mb-3 space-y-2 rounded-md border border-border bg-muted/40 p-4">
@@ -130,16 +153,27 @@ export function IdentityDrawer({
               <Button className="w-full" onClick={() => action(`Offer file opened · ${person.name} · ${person.requirement}`)}>Open offer file</Button>
             </>
           ) : footer === "confirm" ? (
-            <div className="flex gap-2">
-              <Button className="flex-1" onClick={() => { action(`Email confirmed · ${person.name}`); onClose(); }}><Check className="size-4" /> Confirm email</Button>
-              <Button variant="outline" className="flex-1" onClick={() => { action(`${person.name} rejected from campaign`); onClose(); }}>Reject</Button>
-            </div>
+            mailed ? (
+              <div className="rounded-md bg-ok-soft px-3 py-2 text-[12px] text-ok">Email already confirmed for this hit.</div>
+            ) : (
+              <div className="flex gap-2">
+                <Button className="flex-1" onClick={() => { action(`Email confirmed · ${person.name}`); onClose(); }}><Check className="size-4" /> Confirm email</Button>
+                <Button variant="outline" className="flex-1" onClick={() => { action(`${person.name} rejected from campaign`); onClose(); }}>Reject</Button>
+              </div>
+            )
+          ) : locked ? (
+            <Button className="w-full" disabled><LockKeyhole className="size-4" /> Locked · {person.lockedAgency}</Button>
+          ) : person.lock === "no_match" ? (
+            <div className="rounded-md bg-muted px-3 py-2 text-[12px] text-muted-foreground">No match on this requirement. Parked for future briefs.</div>
           ) : (
             <>
-              <Button className="w-full" onClick={() => action(`Spec sent to recruiter · ${person.name} · ${person.requirement}`)}><Send className="size-4" /> Send spec to recruiter (contact hidden)</Button>
+              <Button className="w-full" disabled={sent} onClick={() => { setSent(true); action(`send_spec · ${person.name} → ${req?.recruiter ?? "recruiter"} · ${req?.agency ?? "agency"} · ${person.requirement} (audit written)`); }}>
+                <Send className="size-4" /> {sent ? `Sent · locked to ${req?.agency}` : `Send spec to ${req?.recruiter ?? "recruiter"} · ${req?.agency ?? "agency"} (${person.requirement})`}
+              </Button>
               {canShareDocs && (
                 <Button variant="outline" className="w-full" onClick={() => action(`Documents shared with recruiter · ${person.name}`)}><Share2 className="size-4" /> Share documents with recruiter</Button>
               )}
+              <p className="text-[11px] text-muted-foreground">Contact stays with YZI. Audit meta carries recruiter name, agency and REQ code.</p>
             </>
           )}
         </footer>
@@ -148,6 +182,7 @@ export function IdentityDrawer({
     </div>
   );
 }
+
 
 function PersonCard({ person, onClick }: { person: AdminPerson; onClick: () => void }) {
   return (
@@ -159,37 +194,47 @@ function PersonCard({ person, onClick }: { person: AdminPerson; onClick: () => v
           <div className="font-mono text-[10px] text-muted-foreground">{person.requirement} · {person.stack}</div>
         </div>
       </div>
-      <div className="mt-3 flex items-center justify-between text-[11px] text-muted-foreground">
+      <div className="mt-3 flex items-center justify-between gap-2 text-[11px] text-muted-foreground">
         <span className="truncate">{person.city} · {person.experience}</span>
         <ChevronRight className="size-3.5 shrink-0" />
       </div>
+      <div className="mt-2 truncate text-[10px] font-medium text-steel">{lockChip(person)}</div>
+
     </button>
   );
 }
 
-export function AdminPoolBoard({ action }: { action: Action }) {
+export function AdminPoolBoard({ action, reqFilter }: { action: Action; reqFilter?: string }) {
   const [openId, setOpenId] = useState<string | null>(null);
   const open = openId ? findPerson(openId) : undefined;
+  const req = reqFilter ? findRequirement(reqFilter) : undefined;
+  const people = reqFilter ? adminPool.filter((person) => person.requirement === reqFilter) : adminPool;
   return (
     <div className="space-y-5">
-      <Heading eyebrow="YZI ADMIN · CANDIDATE POOL" title="Candidate pool." description="Every person sits in exactly one column. Full identity opens on the right — recruiters never see it.">
+      <Heading
+        eyebrow={req ? `MATCHES · ${req.id} · ${req.recruiter} · ${req.agency}` : "YZI ADMIN · CANDIDATE POOL"}
+        title={req ? `${req.role}, ${req.city}.` : "Candidate pool."}
+        description="Registered people only. Every person sits in exactly one column, and full identity opens on the right — recruiters never see it."
+      >
         <div className="rounded-md bg-steel-soft px-3 py-2 font-mono text-[10px] tracking-wide text-steel">POOL FIRST · CAMPAIGN IF THIN</div>
       </Heading>
       <div className="grid gap-4 md:grid-cols-3 xl:grid-cols-6">
         {poolColumns.map((column) => {
-          const people = adminPool.filter((person) => person.column === column);
+          const columnPeople = people.filter((person) => person.column === column);
+
           return (
             <section key={column} className="rounded-lg border border-border bg-muted/25 p-3">
               <div className="flex items-center justify-between">
                 <span className="text-[11px] font-semibold uppercase tracking-wider">{column}</span>
-                <span className="font-mono text-[10px] text-muted-foreground">{people.length}</span>
+                <span className="font-mono text-[10px] text-muted-foreground">{columnPeople.length}</span>
               </div>
               <div className="mt-3 space-y-2">
-                {people.length === 0 ? (
+                {columnPeople.length === 0 ? (
                   <p className="rounded-md border border-dashed border-border px-3 py-4 text-[11px] leading-relaxed text-muted-foreground">Nobody at this stage right now.</p>
                 ) : (
-                  people.map((person) => <PersonCard key={person.id} person={person} onClick={() => setOpenId(person.id)} />)
+                  columnPeople.map((person) => <PersonCard key={person.id} person={person} onClick={() => setOpenId(person.id)} />)
                 )}
+
               </div>
             </section>
           );
@@ -206,7 +251,7 @@ function PersonRow({ person, onClick, note }: { person: AdminPerson; onClick: ()
       <div className="grid size-10 shrink-0 place-items-center rounded-md bg-steel-soft font-mono text-[11px] text-steel">{person.initials}</div>
       <div className="min-w-0 flex-1">
         <div className="text-sm font-medium">{person.name}</div>
-        <div className="mt-1 truncate text-xs text-muted-foreground">{person.stack} · {person.city} · {person.experience} · {note ?? person.origin}</div>
+        <div className="mt-1 truncate text-xs text-muted-foreground">{person.stack} · {person.city} · {person.experience} · {note ?? lockChip(person)}</div>
       </div>
       <span className="hidden font-mono text-[11px] text-steel sm:block">{person.requirement}</span>
       <Chip tone={person.column === "No match" ? "signal" : "ok"}>{person.column}</Chip>
@@ -226,24 +271,49 @@ export function AdminCampaignsScreen({ action }: { action: Action }) {
     const campaign = adminCampaigns.find((item) => item.id === view.id);
     if (!campaign) return null;
     const hits = campaign.hitIds.map((id) => findPerson(id)).filter(Boolean) as AdminPerson[];
+    const progress = campaign.targetCount ? Math.round((campaign.extractedCount / campaign.targetCount) * 100) : 0;
     return (
       <div className="space-y-5">
         <button type="button" onClick={() => setView({ mode: "list" })} className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground"><ArrowLeft className="size-3.5" /> All campaigns</button>
-        <Heading eyebrow={`${campaign.id} · ${campaign.status}`} title={`${campaign.name} extracted list.`} description={`${campaign.brief} Every profile below is unconfirmed until YZI confirms the email.`}>
+        <Heading
+          eyebrow={`${campaign.id} · ${campaign.status} · ${campaign.way === "from_req" ? `FROM ${campaign.reqId}` : "YZI IN-HOUSE"}`}
+          title={campaign.status === "DRAFT" ? `${campaign.name} draft brief.` : `${campaign.name} extracted list.`}
+          description={campaign.brief}
+        >
           <div className="rounded-md bg-steel-soft px-3 py-2 font-mono text-[10px] tracking-wide text-steel">{campaign.city.toUpperCase()} · {campaign.dates.toUpperCase()}</div>
         </Heading>
-        <div className="overflow-hidden rounded-lg border border-border bg-card">
-          <div className="flex items-center justify-between border-b border-border px-5 py-3">
-            <div className="text-sm font-semibold">Extracted profiles</div>
-            <span className="font-mono text-[10px] tracking-widest text-muted-foreground">{hits.length} HITS</span>
+
+        {campaign.status === "DRAFT" ? (
+          <div className="rounded-lg border border-border bg-card p-6">
+            <div className="text-sm font-semibold">Draft — nothing extracted yet.</div>
+            <p className="mt-2 max-w-xl text-sm leading-relaxed text-muted-foreground">Sera does not source until the brief is started. Edit the brief, then start the campaign.</p>
+            <div className="mt-5 flex gap-2">
+              <Button variant="outline" onClick={() => setView({ mode: "new" })}>Edit brief</Button>
+              <Button onClick={() => { action(`Campaign started · ${campaign.name}`); setView({ mode: "list" }); }}>Start campaign</Button>
+            </div>
           </div>
-          {hits.length === 0 ? (
-            <p className="px-5 py-8 text-sm text-muted-foreground">This campaign has not extracted any profiles yet.</p>
-          ) : (
-            hits.map((person) => <PersonRow key={person.id} person={person} onClick={() => setOpenId(person.id)} note={`extract · ${campaign.name}`} />)
-          )}
-        </div>
-        {open && <IdentityDrawer person={open} onClose={() => setOpenId(null)} action={action} footer="confirm" />}
+        ) : (
+          <div className="overflow-hidden rounded-lg border border-border bg-card">
+            <div className="flex items-center justify-between border-b border-border px-5 py-3">
+              <div className="text-sm font-semibold">Extracted profiles</div>
+              <span className="font-mono text-[10px] tracking-widest text-muted-foreground">{progress}% · {campaign.extractedCount} EXTRACTED · {campaign.shortlistedCount} SHORTLISTED</span>
+            </div>
+            {hits.length === 0 ? (
+              <p className="px-5 py-8 text-sm text-muted-foreground">No profiles on this campaign.</p>
+            ) : (
+              hits.map((person) => <PersonRow key={person.id} person={person} onClick={() => setOpenId(person.id)} note={`extract · ${campaign.id}`} />)
+            )}
+          </div>
+        )}
+        {open && (
+          <IdentityDrawer
+            person={open}
+            onClose={() => setOpenId(null)}
+            action={action}
+            footer="confirm"
+            mailed={campaign.status === "ENDED" || campaign.mailedIds.includes(open.id)}
+          />
+        )}
       </div>
     );
   }
@@ -254,21 +324,27 @@ export function AdminCampaignsScreen({ action }: { action: Action }) {
         <Button onClick={() => setView({ mode: "new" })}><Plus className="size-4" /> Start new campaign</Button>
       </Heading>
       <div className="overflow-hidden rounded-lg border border-border bg-card">
-        {adminCampaigns.map((campaign) => (
-          <button key={campaign.id} type="button" onClick={() => setView({ mode: "detail", id: campaign.id })} className="flex w-full items-center gap-4 border-b border-border px-5 py-4 text-left transition-colors last:border-0 hover:bg-muted/60">
-            <div className="min-w-0 flex-1">
-              <div className="text-sm font-medium">{campaign.name}</div>
-              <div className="mt-1 truncate text-xs text-muted-foreground">{campaign.id} · {campaign.city} · {campaign.dates}</div>
-            </div>
-            <span className="hidden text-xs text-muted-foreground sm:block">{campaign.hitIds.length} extracted</span>
-            <Chip tone={campaign.status === "RUNNING" ? "ok" : campaign.status === "DRAFT" ? "signal" : "steel"}>{campaign.status}</Chip>
-            <ChevronRight className="size-4 text-muted-foreground" />
-          </button>
-        ))}
+        {adminCampaigns.map((campaign) => {
+          const progress = campaign.targetCount ? Math.round((campaign.extractedCount / campaign.targetCount) * 100) : 0;
+          return (
+            <button key={campaign.id} type="button" onClick={() => setView({ mode: "detail", id: campaign.id })} className="flex w-full items-center gap-4 border-b border-border px-5 py-4 text-left transition-colors last:border-0 hover:bg-muted/60">
+              <div className="min-w-0 flex-1">
+                <div className="text-sm font-medium">{campaign.name}</div>
+                <div className="mt-1 truncate text-xs text-muted-foreground">{campaign.id} · {campaign.city} · {campaign.dates} · {campaign.way === "from_req" ? `from ${campaign.reqId}` : "YZI in-house"}</div>
+              </div>
+              <span className="hidden text-xs text-muted-foreground sm:block">
+                {campaign.status === "DRAFT" ? "brief in edit" : `${progress}% · ${campaign.extractedCount} extracted · ${campaign.shortlistedCount} shortlisted`}
+              </span>
+              <Chip tone={campaign.status === "RUNNING" ? "ok" : campaign.status === "DRAFT" ? "signal" : "steel"}>{campaign.status}</Chip>
+              <ChevronRight className="size-4 text-muted-foreground" />
+            </button>
+          );
+        })}
       </div>
     </div>
   );
 }
+
 
 function Labelled({ label, children }: { label: string; children: React.ReactNode }) {
   return <label className="block text-xs font-medium">{label}<div className="mt-2">{children}</div></label>;
@@ -289,25 +365,31 @@ function Toggle({ label, note, defaultOn }: { label: string; note: string; defau
   );
 }
 
-function NewCampaignPage({ onBack, action }: { onBack: () => void; action: Action }) {
-  const [skills, setSkills] = useState([".NET", "Azure"]);
+function NewCampaignPage({ onBack, action, fromReq, backLabel }: { onBack: () => void; action: Action; fromReq?: string; backLabel?: string }) {
+  const req = fromReq ? findRequirement(fromReq) : undefined;
+  const [skills, setSkills] = useState<string[]>(req?.skills ?? [".NET", "Azure"]);
   const [draft, setDraft] = useState("");
   return (
     <div className="space-y-5">
-      <button type="button" onClick={onBack} className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground"><ArrowLeft className="size-3.5" /> All campaigns</button>
-      <Heading eyebrow="YZI ADMIN · NEW CAMPAIGN" title="Full HR brief." description="Sera only sources what this brief allows. No brief, no extraction." />
+      <button type="button" onClick={onBack} className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground"><ArrowLeft className="size-3.5" /> {backLabel ?? "All campaigns"}</button>
+      <Heading
+        eyebrow={req ? `NEW CAMPAIGN · FROM ${req.id} · ${req.recruiter} · ${req.agency}` : "YZI ADMIN · NEW CAMPAIGN · YZI IN-HOUSE"}
+        title="Full HR brief."
+        description={req ? "Pre-filled from the requirement. Add portals, ticks and dates, then start." : "Sera only sources what this brief allows. No brief, no extraction."}
+      />
       <div className="grid gap-5 xl:grid-cols-[1.4fr_1fr]">
         <section className="space-y-5 rounded-lg border border-border bg-card p-6">
           <div className="grid gap-4 sm:grid-cols-2">
-            <Labelled label="Role"><Input defaultValue="Senior .NET Engineer" /></Labelled>
-            <Labelled label="Target city"><Input defaultValue="Bengaluru" /></Labelled>
+            <Labelled label="Role"><Input defaultValue={req?.role ?? "Senior .NET Engineer"} /></Labelled>
+            <Labelled label="Target city"><Input defaultValue={req?.city ?? "Bengaluru"} /></Labelled>
             <Labelled label="Age band"><Input defaultValue="24 – 38" /></Labelled>
-            <Labelled label="Experience"><Input defaultValue="5 – 8 years" /></Labelled>
-            <Labelled label="CTC band"><Input defaultValue="₹18 – ₹28 LPA" /></Labelled>
-            <Labelled label="Notice period"><Input defaultValue="Up to 60 days" /></Labelled>
+            <Labelled label="Experience"><Input defaultValue={req?.exp ?? "5 – 8 years"} /></Labelled>
+            <Labelled label="CTC band"><Input defaultValue={req?.ctc ?? "₹18 – ₹28 LPA"} /></Labelled>
+            <Labelled label="Notice period"><Input defaultValue={req?.notice ?? "Up to 60 days"} /></Labelled>
             <Labelled label="Start date"><Input type="date" defaultValue="2026-09-01" /></Labelled>
             <Labelled label="End date"><Input type="date" defaultValue="2026-09-30" /></Labelled>
           </div>
+
           <div>
             <div className="text-xs font-medium">Skill chips</div>
             <div className="mt-2 flex flex-wrap items-center gap-2">
@@ -358,47 +440,104 @@ function NewCampaignPage({ onBack, action }: { onBack: () => void; action: Actio
 }
 
 export function AdminRequirementsScreen({ action }: { action: Action }) {
-  const [openReq, setOpenReq] = useState<string | null>(null);
-  const [openId, setOpenId] = useState<string | null>(null);
-  const open = openId ? findPerson(openId) : undefined;
-  const requirement = adminRequirements.find((item) => item.id === openReq);
+  const [view, setView] = useState<{ mode: "list" } | { mode: "matches"; id: string } | { mode: "campaign"; id: string }>({ mode: "list" });
 
-  if (requirement) {
-    const matches = requirement.matchIds.map((id) => findPerson(id)).filter(Boolean) as AdminPerson[];
+  if (view.mode === "matches") {
     return (
       <div className="space-y-5">
-        <button type="button" onClick={() => setOpenReq(null)} className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground"><ArrowLeft className="size-3.5" /> All requirements</button>
-        <Heading eyebrow={`${requirement.id} · ${requirement.desk}`} title={`${requirement.role}, ${requirement.city}.`} description={`Filed ${requirement.filed}. Matched candidates below — open anyone for full identity and to send the spec.`}>
-          <Chip tone={requirement.status === "Pool thin" ? "signal" : "ok"}>{requirement.status}</Chip>
-        </Heading>
-        <div className="overflow-hidden rounded-lg border border-border bg-card">
-          {matches.map((person) => <PersonRow key={person.id} person={person} onClick={() => setOpenId(person.id)} />)}
-        </div>
-        {open && <IdentityDrawer person={open} onClose={() => setOpenId(null)} action={action} />}
+        <button type="button" onClick={() => setView({ mode: "list" })} className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground"><ArrowLeft className="size-3.5" /> All requirements</button>
+        <AdminPoolBoard action={action} reqFilter={view.id} />
       </div>
     );
   }
 
+  if (view.mode === "campaign") {
+    return <NewCampaignPage onBack={() => setView({ mode: "list" })} action={action} fromReq={view.id} backLabel="All requirements" />;
+  }
+
   return (
     <div className="space-y-5">
-      <Heading eyebrow="YZI ADMIN · REQUIREMENTS" title="Requirements from hiring desks." description="Open a requirement to see exactly who Sera matched. Pool-thin rows become campaign drafts." />
+      <Heading eyebrow="YZI ADMIN · REQUIREMENTS" title="Recruiter paper only." description="This page holds what the hiring desks filed. Candidates live in the pool — never here." />
       <div className="overflow-hidden rounded-lg border border-border bg-card">
         {adminRequirements.map((item) => (
-          <button key={item.id} type="button" onClick={() => setOpenReq(item.id)} className="flex w-full items-center gap-4 border-b border-border px-5 py-4 text-left transition-colors last:border-0 hover:bg-muted/60">
-            <span className="font-mono text-[11px] font-medium text-steel">{item.id}</span>
+          <div key={item.id} className="flex flex-wrap items-center gap-4 border-b border-border px-5 py-4 last:border-0">
             <div className="min-w-0 flex-1">
-              <div className="text-sm font-medium">{item.role}</div>
-              <div className="mt-1 truncate text-xs text-muted-foreground">{item.city} · {item.desk} · filed {item.filed}</div>
+              <div className="text-sm font-medium">{item.recruiter} · {item.agency}</div>
+              <div className="mt-1 truncate text-xs text-muted-foreground">{item.role} · {item.city} · <span className="font-mono text-steel">{item.id}</span> · filed {item.filed}</div>
             </div>
-            <span className="hidden text-xs text-muted-foreground sm:block">{item.matchIds.length} matched</span>
-            <Chip tone={item.status === "Pool thin" ? "signal" : item.status === "In workflow" ? "steel" : "ok"}>{item.status}</Chip>
-            <ChevronRight className="size-4 text-muted-foreground" />
-          </button>
+            <Chip tone={item.status === "pool_thin" ? "signal" : item.status === "in_workflow" ? "steel" : "ok"}>{reqStatusLabel[item.status]}</Chip>
+            {item.status === "pool_thin" ? (
+              <Button size="sm" onClick={() => setView({ mode: "campaign", id: item.id })}>Start campaign <ArrowRight className="size-3.5" /></Button>
+            ) : (
+              <Button size="sm" variant="outline" onClick={() => setView({ mode: "matches", id: item.id })}>Open matches <ArrowRight className="size-3.5" /></Button>
+            )}
+          </div>
         ))}
       </div>
     </div>
   );
 }
+
+export function AdminApprovals({ action }: { action: Action }) {
+  const [reviewed, setReviewed] = useState<string[]>([]);
+  const [openId, setOpenId] = useState<string | null>(null);
+  const open = adminApprovals.find((item) => item.id === openId);
+
+  return (
+    <div className="space-y-5">
+      <Heading eyebrow="YZI ADMIN · APPROVALS" title="The queue before it moves." description="Review always opens the full paper. Confirm is still a separate, audited click." />
+      <div className="grid gap-4 lg:grid-cols-3">
+        {adminApprovals.map((item) => {
+          const isReviewed = reviewed.includes(item.id);
+          return (
+            <div key={item.id} className="rounded-lg border border-border bg-card p-5">
+              <div className="font-mono text-[10px] tracking-widest text-muted-foreground">{item.title.toUpperCase()}</div>
+              <div className="mt-2 text-base font-semibold">{item.subject}</div>
+              <div className="mt-1 text-xs text-muted-foreground">{item.meta}</div>
+              <div className="mt-5 flex gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className={cn(isReviewed ? "border-ok bg-ok-soft text-ok hover:bg-ok-soft" : "border-signal text-signal")}
+                  onClick={() => setOpenId(item.id)}
+                >
+                  {isReviewed ? <><Check className="size-3.5" /> Reviewed</> : "Review"}
+                </Button>
+                <Button size="sm" variant="quiet" disabled={!isReviewed} onClick={() => action(`${item.title} confirmed · ${item.subject}`)}>Confirm</Button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {open && (
+        <div className="fixed inset-0 z-40 flex justify-end bg-foreground/25 backdrop-blur-[2px]" onClick={() => setOpenId(null)}>
+          <aside className="sera-rise flex h-full w-full max-w-[440px] flex-col border-l border-border bg-card" onClick={(event) => event.stopPropagation()}>
+            <header className="flex items-start justify-between border-b border-border px-6 py-5">
+              <div>
+                <div className="font-mono text-[10px] tracking-widest text-muted-foreground">{open.title.toUpperCase()}</div>
+                <div className="mt-1 text-base font-semibold">{open.subject}</div>
+                <div className="mt-1 text-xs text-muted-foreground">{open.meta}</div>
+              </div>
+              <button type="button" aria-label="Close" onClick={() => setOpenId(null)} className="grid size-8 place-items-center rounded-md text-muted-foreground hover:bg-muted"><X className="size-4" /></button>
+            </header>
+            <div className="flex-1 space-y-5 overflow-y-auto px-6 py-5">
+              {open.detail.map((row) => <Field key={row.label} label={row.label} value={row.value} />)}
+              <p className="rounded-md border border-border bg-muted/40 p-4 text-sm leading-relaxed">{open.body}</p>
+            </div>
+            <footer className="space-y-2 border-t border-border px-6 py-5">
+              <Button className="w-full" onClick={() => { setReviewed((list) => list.includes(open.id) ? list : [...list, open.id]); action(`${open.title} reviewed · ${open.subject}`); setOpenId(null); }}>
+                <Check className="size-4" /> Mark reviewed
+              </Button>
+              <p className="text-[11px] text-muted-foreground">Reviewing does not approve. Confirm on the card still writes the audit row.</p>
+            </footer>
+          </aside>
+        </div>
+      )}
+    </div>
+  );
+}
+
 
 const seraStages = ["Profile", "Sent", "Meeting", "Docs", "Interview", "Offer", "Placed"];
 
