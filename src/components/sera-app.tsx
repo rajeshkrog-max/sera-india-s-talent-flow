@@ -147,6 +147,10 @@ export function SeraApp({ initialPortal = "admin" }: { initialPortal?: Portal })
                 <span className="hidden font-mono text-[10px] text-muted-foreground sm:block">30 AUG 2026</span>
                 <button type="button" aria-label="Notifications" className="grid size-8 place-items-center rounded-md text-muted-foreground hover:bg-muted"><Bell className="size-4" /></button>
                 <div className="grid size-8 place-items-center rounded-md bg-steel-soft text-xs font-semibold text-steel">{portal === "admin" ? "YZ" : portal === "recruiter" ? "PS" : "AK"}</div>
+                <div className="hidden h-6 w-px bg-border sm:block" />
+                <button type="button" onClick={() => setShowLogoutConfirm(true)} className="flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-signal-soft hover:text-signal">
+                  <LogOut className="size-3.5" /> Log out
+                </button>
               </div>
             </div>
           </header>
