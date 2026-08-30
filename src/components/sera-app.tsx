@@ -1,5 +1,5 @@
 import { useMemo, useState, type ChangeEvent } from "react";
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -22,6 +22,7 @@ import {
   Inbox,
   LayoutDashboard,
   LockKeyhole,
+  LogOut,
   MessageSquare,
   MoreHorizontal,
   PanelLeftClose,
@@ -77,12 +78,19 @@ export function SeraApp({ initialPortal = "admin" }: { initialPortal?: Portal })
   const [section, setSection] = useState<Section>(initialPortal === "admin" ? "overview" : "overview");
   const [showRequirementForm, setShowRequirementForm] = useState(false);
   const [showCampaignForm, setShowCampaignForm] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [toast, setToast] = useState("");
+  const navigate = useNavigate();
   const store = useDemoStore();
 
   const action = (message: string) => {
     setToast(message);
     window.setTimeout(() => setToast(""), 2600);
+  };
+
+  const logout = () => {
+    setShowLogoutConfirm(false);
+    navigate({ to: "/" });
   };
 
   return (
@@ -139,6 +147,10 @@ export function SeraApp({ initialPortal = "admin" }: { initialPortal?: Portal })
                 <span className="hidden font-mono text-[10px] text-muted-foreground sm:block">30 AUG 2026</span>
                 <button type="button" aria-label="Notifications" className="grid size-8 place-items-center rounded-md text-muted-foreground hover:bg-muted"><Bell className="size-4" /></button>
                 <div className="grid size-8 place-items-center rounded-md bg-steel-soft text-xs font-semibold text-steel">{portal === "admin" ? "YZ" : portal === "recruiter" ? "PS" : "AK"}</div>
+                <div className="hidden h-6 w-px bg-border sm:block" />
+                <button type="button" onClick={() => setShowLogoutConfirm(true)} className="flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-signal-soft hover:text-signal">
+                  <LogOut className="size-3.5" /> Log out
+                </button>
               </div>
             </div>
           </header>
@@ -161,6 +173,19 @@ export function SeraApp({ initialPortal = "admin" }: { initialPortal?: Portal })
 
       {showRequirementForm && <RequirementModal onClose={() => setShowRequirementForm(false)} onSave={() => { setShowRequirementForm(false); action("Requirement REQ-318 saved as draft"); }} />}
       {showCampaignForm && <CampaignModal onClose={() => setShowCampaignForm(false)} onSave={() => { setShowCampaignForm(false); action("Campaign CMP-014 saved as draft"); }} />}
+      {showLogoutConfirm && (
+        <div className="fixed inset-0 z-50 grid place-items-center bg-background/70 p-4 backdrop-blur-sm">
+          <div className="sera-rise w-full max-w-sm rounded-lg border border-border bg-card p-6 shadow-2xl">
+            <div className="grid size-10 place-items-center rounded-md bg-signal-soft"><LogOut className="size-5 text-signal" /></div>
+            <h2 className="mt-4 text-base font-semibold tracking-tight">Log out of {portal === "candidate" ? "your candidate desk" : portal === "recruiter" ? "the recruiter desk" : "the admin command center"}?</h2>
+            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">Are you sure? You will return to the demo map and your desk session ends.</p>
+            <div className="mt-6 flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setShowLogoutConfirm(false)}>No, stay</Button>
+              <Button onClick={logout}>Yes, log out</Button>
+            </div>
+          </div>
+        </div>
+      )}
       {toast && <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-md bg-primary px-4 py-3 text-sm text-primary-foreground shadow-lg"><Check className="size-4 text-ok" />{toast}</div>}
     </div>
   );
