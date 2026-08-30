@@ -441,47 +441,104 @@ function NewCampaignPage({ onBack, action, fromReq, backLabel }: { onBack: () =>
 }
 
 export function AdminRequirementsScreen({ action }: { action: Action }) {
-  const [openReq, setOpenReq] = useState<string | null>(null);
-  const [openId, setOpenId] = useState<string | null>(null);
-  const open = openId ? findPerson(openId) : undefined;
-  const requirement = adminRequirements.find((item) => item.id === openReq);
+  const [view, setView] = useState<{ mode: "list" } | { mode: "matches"; id: string } | { mode: "campaign"; id: string }>({ mode: "list" });
 
-  if (requirement) {
-    const matches = requirement.matchIds.map((id) => findPerson(id)).filter(Boolean) as AdminPerson[];
+  if (view.mode === "matches") {
     return (
       <div className="space-y-5">
-        <button type="button" onClick={() => setOpenReq(null)} className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground"><ArrowLeft className="size-3.5" /> All requirements</button>
-        <Heading eyebrow={`${requirement.id} · ${requirement.desk}`} title={`${requirement.role}, ${requirement.city}.`} description={`Filed ${requirement.filed}. Matched candidates below — open anyone for full identity and to send the spec.`}>
-          <Chip tone={requirement.status === "Pool thin" ? "signal" : "ok"}>{requirement.status}</Chip>
-        </Heading>
-        <div className="overflow-hidden rounded-lg border border-border bg-card">
-          {matches.map((person) => <PersonRow key={person.id} person={person} onClick={() => setOpenId(person.id)} />)}
-        </div>
-        {open && <IdentityDrawer person={open} onClose={() => setOpenId(null)} action={action} />}
+        <button type="button" onClick={() => setView({ mode: "list" })} className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground"><ArrowLeft className="size-3.5" /> All requirements</button>
+        <AdminPoolBoard action={action} reqFilter={view.id} />
       </div>
     );
   }
 
+  if (view.mode === "campaign") {
+    return <NewCampaignPage onBack={() => setView({ mode: "list" })} action={action} fromReq={view.id} backLabel="All requirements" />;
+  }
+
   return (
     <div className="space-y-5">
-      <Heading eyebrow="YZI ADMIN · REQUIREMENTS" title="Requirements from hiring desks." description="Open a requirement to see exactly who Sera matched. Pool-thin rows become campaign drafts." />
+      <Heading eyebrow="YZI ADMIN · REQUIREMENTS" title="Recruiter paper only." description="This page holds what the hiring desks filed. Candidates live in the pool — never here." />
       <div className="overflow-hidden rounded-lg border border-border bg-card">
         {adminRequirements.map((item) => (
-          <button key={item.id} type="button" onClick={() => setOpenReq(item.id)} className="flex w-full items-center gap-4 border-b border-border px-5 py-4 text-left transition-colors last:border-0 hover:bg-muted/60">
-            <span className="font-mono text-[11px] font-medium text-steel">{item.id}</span>
+          <div key={item.id} className="flex flex-wrap items-center gap-4 border-b border-border px-5 py-4 last:border-0">
             <div className="min-w-0 flex-1">
-              <div className="text-sm font-medium">{item.role}</div>
-              <div className="mt-1 truncate text-xs text-muted-foreground">{item.city} · {item.desk} · filed {item.filed}</div>
+              <div className="text-sm font-medium">{item.recruiter} · {item.agency}</div>
+              <div className="mt-1 truncate text-xs text-muted-foreground">{item.role} · {item.city} · <span className="font-mono text-steel">{item.id}</span> · filed {item.filed}</div>
             </div>
-            <span className="hidden text-xs text-muted-foreground sm:block">{item.matchIds.length} matched</span>
-            <Chip tone={item.status === "Pool thin" ? "signal" : item.status === "In workflow" ? "steel" : "ok"}>{item.status}</Chip>
-            <ChevronRight className="size-4 text-muted-foreground" />
-          </button>
+            <Chip tone={item.status === "pool_thin" ? "signal" : item.status === "in_workflow" ? "steel" : "ok"}>{reqStatusLabel[item.status]}</Chip>
+            {item.status === "pool_thin" ? (
+              <Button size="sm" onClick={() => setView({ mode: "campaign", id: item.id })}>Start campaign <ArrowRight className="size-3.5" /></Button>
+            ) : (
+              <Button size="sm" variant="outline" onClick={() => setView({ mode: "matches", id: item.id })}>Open matches <ArrowRight className="size-3.5" /></Button>
+            )}
+          </div>
         ))}
       </div>
     </div>
   );
 }
+
+export function AdminApprovals({ action }: { action: Action }) {
+  const [reviewed, setReviewed] = useState<string[]>([]);
+  const [openId, setOpenId] = useState<string | null>(null);
+  const open = adminApprovals.find((item) => item.id === openId);
+
+  return (
+    <div className="space-y-5">
+      <Heading eyebrow="YZI ADMIN · APPROVALS" title="The queue before it moves." description="Review always opens the full paper. Confirm is still a separate, audited click." />
+      <div className="grid gap-4 lg:grid-cols-3">
+        {adminApprovals.map((item) => {
+          const isReviewed = reviewed.includes(item.id);
+          return (
+            <div key={item.id} className="rounded-lg border border-border bg-card p-5">
+              <div className="font-mono text-[10px] tracking-widest text-muted-foreground">{item.title.toUpperCase()}</div>
+              <div className="mt-2 text-base font-semibold">{item.subject}</div>
+              <div className="mt-1 text-xs text-muted-foreground">{item.meta}</div>
+              <div className="mt-5 flex gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className={cn(isReviewed ? "border-ok bg-ok-soft text-ok hover:bg-ok-soft" : "border-signal text-signal")}
+                  onClick={() => setOpenId(item.id)}
+                >
+                  {isReviewed ? <><Check className="size-3.5" /> Reviewed</> : "Review"}
+                </Button>
+                <Button size="sm" variant="quiet" disabled={!isReviewed} onClick={() => action(`${item.title} confirmed · ${item.subject}`)}>Confirm</Button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {open && (
+        <div className="fixed inset-0 z-40 flex justify-end bg-foreground/25 backdrop-blur-[2px]" onClick={() => setOpenId(null)}>
+          <aside className="sera-rise flex h-full w-full max-w-[440px] flex-col border-l border-border bg-card" onClick={(event) => event.stopPropagation()}>
+            <header className="flex items-start justify-between border-b border-border px-6 py-5">
+              <div>
+                <div className="font-mono text-[10px] tracking-widest text-muted-foreground">{open.title.toUpperCase()}</div>
+                <div className="mt-1 text-base font-semibold">{open.subject}</div>
+                <div className="mt-1 text-xs text-muted-foreground">{open.meta}</div>
+              </div>
+              <button type="button" aria-label="Close" onClick={() => setOpenId(null)} className="grid size-8 place-items-center rounded-md text-muted-foreground hover:bg-muted"><X className="size-4" /></button>
+            </header>
+            <div className="flex-1 space-y-5 overflow-y-auto px-6 py-5">
+              {open.detail.map((row) => <Field key={row.label} label={row.label} value={row.value} />)}
+              <p className="rounded-md border border-border bg-muted/40 p-4 text-sm leading-relaxed">{open.body}</p>
+            </div>
+            <footer className="space-y-2 border-t border-border px-6 py-5">
+              <Button className="w-full" onClick={() => { setReviewed((list) => list.includes(open.id) ? list : [...list, open.id]); action(`${open.title} reviewed · ${open.subject}`); setOpenId(null); }}>
+                <Check className="size-4" /> Mark reviewed
+              </Button>
+              <p className="text-[11px] text-muted-foreground">Reviewing does not approve. Confirm on the card still writes the audit row.</p>
+            </footer>
+          </aside>
+        </div>
+      )}
+    </div>
+  );
+}
+
 
 const seraStages = ["Profile", "Sent", "Meeting", "Docs", "Interview", "Offer", "Placed"];
 
