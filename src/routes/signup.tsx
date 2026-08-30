@@ -5,12 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { publicOpenRoles } from "@/lib/admin-data";
 
-type SignupSearch = { token?: string };
+type SignupSearch = { token?: string | undefined };
 
 export const Route = createFileRoute("/signup")({
   validateSearch: (search: Record<string, unknown>): SignupSearch => ({
     token: typeof search['token'] === "string" ? (search['token'] as string) : undefined,
   }),
+
   head: () => ({
     meta: [
       { title: "Create your candidate profile — SERA / YZI" },
