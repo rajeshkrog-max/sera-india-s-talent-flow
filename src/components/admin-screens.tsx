@@ -272,24 +272,49 @@ export function AdminCampaignsScreen({ action }: { action: Action }) {
     const campaign = adminCampaigns.find((item) => item.id === view.id);
     if (!campaign) return null;
     const hits = campaign.hitIds.map((id) => findPerson(id)).filter(Boolean) as AdminPerson[];
+    const progress = campaign.targetCount ? Math.round((campaign.extractedCount / campaign.targetCount) * 100) : 0;
     return (
       <div className="space-y-5">
         <button type="button" onClick={() => setView({ mode: "list" })} className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground"><ArrowLeft className="size-3.5" /> All campaigns</button>
-        <Heading eyebrow={`${campaign.id} · ${campaign.status}`} title={`${campaign.name} extracted list.`} description={`${campaign.brief} Every profile below is unconfirmed until YZI confirms the email.`}>
+        <Heading
+          eyebrow={`${campaign.id} · ${campaign.status} · ${campaign.way === "from_req" ? `FROM ${campaign.reqId}` : "YZI IN-HOUSE"}`}
+          title={campaign.status === "DRAFT" ? `${campaign.name} draft brief.` : `${campaign.name} extracted list.`}
+          description={campaign.brief}
+        >
           <div className="rounded-md bg-steel-soft px-3 py-2 font-mono text-[10px] tracking-wide text-steel">{campaign.city.toUpperCase()} · {campaign.dates.toUpperCase()}</div>
         </Heading>
-        <div className="overflow-hidden rounded-lg border border-border bg-card">
-          <div className="flex items-center justify-between border-b border-border px-5 py-3">
-            <div className="text-sm font-semibold">Extracted profiles</div>
-            <span className="font-mono text-[10px] tracking-widest text-muted-foreground">{hits.length} HITS</span>
+
+        {campaign.status === "DRAFT" ? (
+          <div className="rounded-lg border border-border bg-card p-6">
+            <div className="text-sm font-semibold">Draft — nothing extracted yet.</div>
+            <p className="mt-2 max-w-xl text-sm leading-relaxed text-muted-foreground">Sera does not source until the brief is started. Edit the brief, then start the campaign.</p>
+            <div className="mt-5 flex gap-2">
+              <Button variant="outline" onClick={() => setView({ mode: "new" })}>Edit brief</Button>
+              <Button onClick={() => { action(`Campaign started · ${campaign.name}`); setView({ mode: "list" }); }}>Start campaign</Button>
+            </div>
           </div>
-          {hits.length === 0 ? (
-            <p className="px-5 py-8 text-sm text-muted-foreground">This campaign has not extracted any profiles yet.</p>
-          ) : (
-            hits.map((person) => <PersonRow key={person.id} person={person} onClick={() => setOpenId(person.id)} note={`extract · ${campaign.name}`} />)
-          )}
-        </div>
-        {open && <IdentityDrawer person={open} onClose={() => setOpenId(null)} action={action} footer="confirm" />}
+        ) : (
+          <div className="overflow-hidden rounded-lg border border-border bg-card">
+            <div className="flex items-center justify-between border-b border-border px-5 py-3">
+              <div className="text-sm font-semibold">Extracted profiles</div>
+              <span className="font-mono text-[10px] tracking-widest text-muted-foreground">{progress}% · {campaign.extractedCount} EXTRACTED · {campaign.shortlistedCount} SHORTLISTED</span>
+            </div>
+            {hits.length === 0 ? (
+              <p className="px-5 py-8 text-sm text-muted-foreground">No profiles on this campaign.</p>
+            ) : (
+              hits.map((person) => <PersonRow key={person.id} person={person} onClick={() => setOpenId(person.id)} note={`extract · ${campaign.id}`} />)
+            )}
+          </div>
+        )}
+        {open && (
+          <IdentityDrawer
+            person={open}
+            onClose={() => setOpenId(null)}
+            action={action}
+            footer="confirm"
+            mailed={campaign.status === "ENDED" || campaign.mailedIds.includes(open.id)}
+          />
+        )}
       </div>
     );
   }
@@ -300,21 +325,27 @@ export function AdminCampaignsScreen({ action }: { action: Action }) {
         <Button onClick={() => setView({ mode: "new" })}><Plus className="size-4" /> Start new campaign</Button>
       </Heading>
       <div className="overflow-hidden rounded-lg border border-border bg-card">
-        {adminCampaigns.map((campaign) => (
-          <button key={campaign.id} type="button" onClick={() => setView({ mode: "detail", id: campaign.id })} className="flex w-full items-center gap-4 border-b border-border px-5 py-4 text-left transition-colors last:border-0 hover:bg-muted/60">
-            <div className="min-w-0 flex-1">
-              <div className="text-sm font-medium">{campaign.name}</div>
-              <div className="mt-1 truncate text-xs text-muted-foreground">{campaign.id} · {campaign.city} · {campaign.dates}</div>
-            </div>
-            <span className="hidden text-xs text-muted-foreground sm:block">{campaign.hitIds.length} extracted</span>
-            <Chip tone={campaign.status === "RUNNING" ? "ok" : campaign.status === "DRAFT" ? "signal" : "steel"}>{campaign.status}</Chip>
-            <ChevronRight className="size-4 text-muted-foreground" />
-          </button>
-        ))}
+        {adminCampaigns.map((campaign) => {
+          const progress = campaign.targetCount ? Math.round((campaign.extractedCount / campaign.targetCount) * 100) : 0;
+          return (
+            <button key={campaign.id} type="button" onClick={() => setView({ mode: "detail", id: campaign.id })} className="flex w-full items-center gap-4 border-b border-border px-5 py-4 text-left transition-colors last:border-0 hover:bg-muted/60">
+              <div className="min-w-0 flex-1">
+                <div className="text-sm font-medium">{campaign.name}</div>
+                <div className="mt-1 truncate text-xs text-muted-foreground">{campaign.id} · {campaign.city} · {campaign.dates} · {campaign.way === "from_req" ? `from ${campaign.reqId}` : "YZI in-house"}</div>
+              </div>
+              <span className="hidden text-xs text-muted-foreground sm:block">
+                {campaign.status === "DRAFT" ? "brief in edit" : `${progress}% · ${campaign.extractedCount} extracted · ${campaign.shortlistedCount} shortlisted`}
+              </span>
+              <Chip tone={campaign.status === "RUNNING" ? "ok" : campaign.status === "DRAFT" ? "signal" : "steel"}>{campaign.status}</Chip>
+              <ChevronRight className="size-4 text-muted-foreground" />
+            </button>
+          );
+        })}
       </div>
     </div>
   );
 }
+
 
 function Labelled({ label, children }: { label: string; children: React.ReactNode }) {
   return <label className="block text-xs font-medium">{label}<div className="mt-2">{children}</div></label>;
