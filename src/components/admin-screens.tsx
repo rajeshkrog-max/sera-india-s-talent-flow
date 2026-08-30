@@ -445,7 +445,7 @@ export function AdminSeraControl({ action }: { action: Action }) {
                 <div className="font-mono text-[10px] tracking-widest text-muted-foreground">UNLOCK · STAGES</div>
                 <div className="mt-3 flex flex-wrap gap-2">
                   {seraStages.map((stage, index) => (
-                    <span key={stage} className={cn("rounded-full px-2.5 py-1 text-[11px] font-medium", index === currentIndex ? "bg-signal text-signal-foreground" : index < currentIndex ? "bg-ok-soft text-ok" : "bg-steel-soft/60 text-muted-foreground")}>{stage}</span>
+                    <span key={stage} className={cn("rounded-full px-2.5 py-1 text-[11px] font-medium", index === currentIndex ? "bg-signal-soft text-signal ring-1 ring-signal" : index < currentIndex ? "bg-ok-soft text-ok" : "bg-steel-soft/60 text-muted-foreground")}>{stage}</span>
                   ))}
                 </div>
                 <Button variant="outline" className="mt-4 w-full" disabled={!nextStage} onClick={() => { if (!nextStage) return; setStageOverride((map) => ({ ...map, [person.id]: nextStage })); action(`${person.name} unlocked to ${nextStage}`); }}>
