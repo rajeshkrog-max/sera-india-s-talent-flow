@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as CandidateRouteImport } from './routes/candidate'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as RecruiterRouteImport } from './routes/recruiter'
 import { Route as SignupRouteImport } from './routes/signup'
 
@@ -30,6 +31,11 @@ const CandidateRoute = CandidateRouteImport.update({
   path: '/candidate',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RecruiterRoute = RecruiterRouteImport.update({
   id: '/recruiter',
   path: '/recruiter',
@@ -45,6 +51,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/candidate': typeof CandidateRoute
+  '/login': typeof LoginRoute
   '/recruiter': typeof RecruiterRoute
   '/signup': typeof SignupRoute
 }
@@ -52,6 +59,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/candidate': typeof CandidateRoute
+  '/login': typeof LoginRoute
   '/recruiter': typeof RecruiterRoute
   '/signup': typeof SignupRoute
 }
@@ -60,21 +68,30 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/candidate': typeof CandidateRoute
+  '/login': typeof LoginRoute
   '/recruiter': typeof RecruiterRoute
   '/signup': typeof SignupRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/admin' | '/candidate' | '/recruiter' | '/signup'
+  fullPaths: '/' | '/admin' | '/candidate' | '/login' | '/recruiter' | '/signup'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/admin' | '/candidate' | '/recruiter' | '/signup'
-  id: '__root__' | '/' | '/admin' | '/candidate' | '/recruiter' | '/signup'
+  to: '/' | '/admin' | '/candidate' | '/login' | '/recruiter' | '/signup'
+  id:
+    | '__root__'
+    | '/'
+    | '/admin'
+    | '/candidate'
+    | '/login'
+    | '/recruiter'
+    | '/signup'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
   CandidateRoute: typeof CandidateRoute
+  LoginRoute: typeof LoginRoute
   RecruiterRoute: typeof RecruiterRoute
   SignupRoute: typeof SignupRoute
 }
@@ -102,6 +119,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CandidateRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/recruiter': {
       id: '/recruiter'
       path: '/recruiter'
@@ -123,6 +147,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
   CandidateRoute: CandidateRoute,
+  LoginRoute: LoginRoute,
   RecruiterRoute: RecruiterRoute,
   SignupRoute: SignupRoute,
 }
