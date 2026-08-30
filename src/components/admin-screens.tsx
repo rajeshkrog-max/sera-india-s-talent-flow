@@ -55,6 +55,8 @@ export function IdentityDrawer({
   footer?: "spec" | "confirm";
 }) {
   const canShareDocs = person.step === "Docs";
+  const req = adminRequirements.find((item) => item.id === person.requirement);
+  const [showPlacement, setShowPlacement] = useState(false);
   return (
     <div className="fixed inset-0 z-40 flex justify-end bg-foreground/25 backdrop-blur-[2px]" onClick={onClose}>
       <aside className="sera-rise flex h-full w-full max-w-[460px] flex-col border-l border-border bg-card" onClick={(event) => event.stopPropagation()}>
@@ -67,11 +69,14 @@ export function IdentityDrawer({
             )}
             <div>
               <div className="text-base font-semibold tracking-tight">{person.name}</div>
-              <div className="mt-1 font-mono text-[10px] tracking-widest text-muted-foreground">{person.id} · {person.requirement} · {person.column.toUpperCase()}</div>
+              <div className="mt-1 text-xs text-muted-foreground">{req?.desk ?? "YZI in-house"}</div>
+              <div className="mt-0.5 text-xs font-medium">{req?.role ?? "Unassigned role"} · <span className="font-mono text-[11px] text-steel">{person.requirement}</span></div>
+              <div className="mt-1 font-mono text-[10px] tracking-widest text-muted-foreground">{person.id} · {person.column.toUpperCase()}</div>
             </div>
           </div>
           <button type="button" aria-label="Close" onClick={onClose} className="grid size-8 place-items-center rounded-md text-muted-foreground hover:bg-muted"><X className="size-4" /></button>
         </header>
+
 
         <div className="flex-1 space-y-6 overflow-y-auto px-6 py-5">
           <div className="rounded-md bg-signal-soft p-4">
