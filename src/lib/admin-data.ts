@@ -18,6 +18,8 @@ export type AdminPerson = {
   matchReason: string;
   seraNote: string;
   step: string;
+  offerStatus?: string;
+  placement?: { package: string; terms: string; placedDate: string; auditRef: string };
 };
 
 export const adminPool: AdminPerson[] = [
