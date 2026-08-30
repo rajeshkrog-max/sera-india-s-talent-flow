@@ -433,15 +433,26 @@ export function AdminSeraControl({ action }: { action: Action }) {
                 <div className="grid size-10 place-items-center rounded-md bg-signal-soft text-signal"><LockKeyhole className="size-5" /></div>
                 <div>
                   <div className="text-sm font-semibold">{person.name}</div>
-                  <div className="font-mono text-[10px] tracking-widest text-muted-foreground">{person.id} · {person.requirement} · STEP {person.step.toUpperCase()}</div>
+                  <div className="font-mono text-[10px] tracking-widest text-muted-foreground">{person.id} · {person.requirement} · STEP {currentStage.toUpperCase()}</div>
                 </div>
               </div>
               <p className="mt-4 text-sm leading-relaxed text-muted-foreground">{person.seraNote}</p>
               <div className="mt-6 space-y-2">
                 <Button className="w-full" onClick={() => action(`Spec sent to recruiter · ${person.name}`)}><Send className="size-4" /> Send spec to recruiter (contact hidden)</Button>
                 <Button variant="outline" className="w-full" onClick={() => action(`Documents shared with recruiter · ${person.name}`)}><Share2 className="size-4" /> Share documents with recruiter</Button>
-                <Button variant="outline" className="w-full" onClick={() => action(`Next stage unlocked for ${person.name}`)}><LockKeyhole className="size-4" /> Unlock next stage</Button>
               </div>
+              <div className="mt-6 rounded-md border border-border bg-muted/30 p-4">
+                <div className="font-mono text-[10px] tracking-widest text-muted-foreground">UNLOCK · STAGES</div>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {seraStages.map((stage, index) => (
+                    <span key={stage} className={cn("rounded-full px-2.5 py-1 text-[11px] font-medium", index === currentIndex ? "bg-signal text-signal-foreground" : index < currentIndex ? "bg-ok-soft text-ok" : "bg-steel-soft/60 text-muted-foreground")}>{stage}</span>
+                  ))}
+                </div>
+                <Button variant="outline" className="mt-4 w-full" disabled={!nextStage} onClick={() => { if (!nextStage) return; setStageOverride((map) => ({ ...map, [person.id]: nextStage })); action(`${person.name} unlocked to ${nextStage}`); }}>
+                  <LockKeyhole className="size-4" /> {nextStage ? `Unlock ${nextStage}` : "Final stage reached"}
+                </Button>
+              </div>
+
               <p className="mt-4 text-[11px] text-muted-foreground">Every action here writes one insert-only audit row.</p>
             </>
           ) : (
