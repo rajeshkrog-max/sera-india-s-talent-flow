@@ -195,10 +195,12 @@ function PersonCard({ person, onClick }: { person: AdminPerson; onClick: () => v
           <div className="font-mono text-[10px] text-muted-foreground">{person.requirement} · {person.stack}</div>
         </div>
       </div>
-      <div className="mt-3 flex items-center justify-between text-[11px] text-muted-foreground">
+      <div className="mt-3 flex items-center justify-between gap-2 text-[11px] text-muted-foreground">
         <span className="truncate">{person.city} · {person.experience}</span>
         <ChevronRight className="size-3.5 shrink-0" />
       </div>
+      <div className="mt-2 truncate text-[10px] font-medium text-steel">{lockChip(person)}</div>
+
     </button>
   );
 }
