@@ -60,10 +60,13 @@ export type CandidateProfile = {
   about: string;
 };
 
+export type ProgressNote = { body: string; at: string };
+
 type State = {
   stepIndex: number;
   stepDates: Partial<Record<CandidateStage, string>>;
   stepAgeDays: Partial<Record<CandidateStage, number>>;
+  notes: Partial<Record<CandidateStage, ProgressNote>>;
   docs: CandidateDoc[];
   invites: JobInvite[];
   grievances: Grievance[];
@@ -78,6 +81,7 @@ let state: State = {
   stepIndex: 1,
   stepDates: { Profile: "12 Aug 2026, 10:04", Review: "24 Aug 2026, 16:20" },
   stepAgeDays: { Review: 23 },
+  notes: { Profile: { body: "Profile received and verified by YZI.", at: "12 Aug 2026, 10:30" } },
   docs: [
     { id: "DOC-1", kind: "resume", name: "arjun-resume.pdf", uploadedAt: "12 Aug 2026" },
     { id: "DOC-2", kind: "aadhaar", name: "aadhaar-front.pdf", uploadedAt: "12 Aug 2026" },
@@ -206,6 +210,11 @@ export const candidateStore = {
   },
   requestIdentityChange(field: string, reason: string) {
     set({ identityRequests: [...state.identityRequests, { field, reason, status: "pending" }] });
+  },
+  postNote(stage: CandidateStage, body: string) {
+    const at = now();
+    set({ notes: { ...state.notes, [stage]: { body, at } } });
+    return at;
   },
 };
 

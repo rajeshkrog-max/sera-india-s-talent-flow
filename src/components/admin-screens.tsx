@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { candidateStore, useCandidateStore } from "@/lib/candidate-store";
+import { candidateStages, candidateStore, useCandidateStore, type CandidateStage } from "@/lib/candidate-store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -46,6 +46,30 @@ function Field({ label, value }: { label: string; value: string }) {
     <div>
       <div className="font-mono text-[10px] tracking-[0.14em] text-muted-foreground">{label}</div>
       <div className="mt-1 text-sm font-medium">{value}</div>
+    </div>
+  );
+}
+
+function PostUpdate({ personName, action }: { personName: string; action: Action }) {
+  const [stage, setStage] = useState<CandidateStage>(candidateStages[0] ?? "Profile");
+  const [body, setBody] = useState("");
+  const [postedAt, setPostedAt] = useState<string | null>(null);
+  const post = () => {
+    if (!body.trim()) return;
+    const at = candidateStore.postNote(stage, body.trim());
+    setPostedAt(at);
+    setBody("");
+    action(`Note posted · ${personName} · ${stage} · ${at}`);
+  };
+  return (
+    <div className="rounded-md border border-border p-4">
+      <div className="font-mono text-[10px] tracking-[0.14em] text-muted-foreground">POST UPDATE TO CANDIDATE</div>
+      <select value={stage} onChange={(event) => setStage(event.target.value as CandidateStage)} className="mt-3 h-9 w-full rounded-md border border-border bg-background px-3 text-sm">
+        {candidateStages.map((item) => <option key={item} value={item}>{item}</option>)}
+      </select>
+      <Textarea value={body} onChange={(event) => setBody(event.target.value)} rows={3} className="mt-2" placeholder="Update the candidate sees on My progress…" />
+      <Button variant="outline" className="mt-2 w-full" disabled={!body.trim()} onClick={post}><Send className="size-4" /> Post update · {stage}</Button>
+      {postedAt && <p className="mt-2 font-mono text-[10px] text-ok">Saved · {postedAt}</p>}
     </div>
   );
 }
@@ -129,6 +153,8 @@ export function IdentityDrawer({
           </div>
 
           <CandidateFeedbackSlider personName={person.name} action={action} />
+
+          <PostUpdate personName={person.name} action={action} />
 
           <div className="rounded-md border border-border bg-muted/40 p-4">
             <div className="font-mono text-[10px] tracking-widest text-steel">SERA NOTE</div>
@@ -637,6 +663,9 @@ export function AdminSeraControl({ action }: { action: Action }) {
               <div className="mt-6 space-y-2">
                 <Button className="w-full" onClick={() => action(`Spec sent to recruiter · ${person.name}`)}><Send className="size-4" /> Send spec to recruiter (contact hidden)</Button>
                 <Button variant="outline" className="w-full" onClick={() => action(`Documents shared with recruiter · ${person.name}`)}><Share2 className="size-4" /> Share documents with recruiter</Button>
+              </div>
+              <div className="mt-4">
+                <PostUpdate personName={person.name} action={action} />
               </div>
               <div className="mt-6 rounded-md border border-border bg-muted/30 p-4">
                 <div className="font-mono text-[10px] tracking-widest text-muted-foreground">UNLOCK · STAGES</div>

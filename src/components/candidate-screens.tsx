@@ -231,6 +231,25 @@ export function CandidateProgress({ action }: { action: Action }) {
           <div><div className="font-mono text-[10px] tracking-widest text-muted-foreground">UPDATED</div><div className="mt-1 text-sm font-medium">{store.stepDates[currentStage] ?? "Awaiting YZI"}</div></div>
           <div><div className="font-mono text-[10px] tracking-widest text-muted-foreground">REQUIREMENT</div><div className="mt-1 font-mono text-sm font-medium text-steel">{reqId}</div></div>
         </div>
+
+        <div className="mt-5 space-y-3 border-t border-border pt-5">
+          {candidateStages.slice(0, current + 1).map((stage) => {
+            const note = store.notes[stage];
+            return (
+              <div key={stage} className="rounded-md border border-border p-3">
+                <div className="flex items-center justify-between gap-3">
+                  <span className={cn("text-xs font-semibold", stage === currentStage ? "text-signal" : "text-foreground")}>{stage}</span>
+                  <span className="font-mono text-[10px] text-muted-foreground">{note?.at ?? store.stepDates[stage] ?? ""}</span>
+                </div>
+                {note ? (
+                  <p className="mt-2 text-xs leading-relaxed text-muted-foreground">{note.body}</p>
+                ) : (
+                  <p className="mt-2 text-xs italic text-muted-foreground">Waiting for YZI update.</p>
+                )}
+              </div>
+            );
+          })}
+        </div>
       </Card>
 
       {store.grievances.length > 0 && (
