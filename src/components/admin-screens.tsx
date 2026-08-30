@@ -48,30 +48,41 @@ export function IdentityDrawer({
   onClose,
   action,
   footer,
+  mailed,
 }: {
   person: AdminPerson;
   onClose: () => void;
   action: Action;
   footer?: "spec" | "confirm";
+  mailed?: boolean;
 }) {
   const canShareDocs = person.step === "Docs";
-  const req = adminRequirements.find((item) => item.id === person.requirement);
+  const req = findRequirement(person.requirement);
   const [showPlacement, setShowPlacement] = useState(false);
+  const [sent, setSent] = useState(false);
+  const chip = lockChip(person);
+  const locked = person.lock === "locked";
   return (
     <div className="fixed inset-0 z-40 flex justify-end bg-foreground/25 backdrop-blur-[2px]" onClick={onClose}>
       <aside className="sera-rise flex h-full w-full max-w-[460px] flex-col border-l border-border bg-card" onClick={(event) => event.stopPropagation()}>
         <header className="flex items-start justify-between gap-3 border-b border-border px-6 py-5">
           <div className="flex items-center gap-3">
             {person.id === "CAND-0417" ? (
-              <img src={rahulPortrait} alt={person.name} width={52} height={52} loading="lazy" className="size-13 size-[52px] rounded-md object-cover" />
+              <img src={rahulPortrait} alt={person.name} width={52} height={52} loading="lazy" className="size-[52px] rounded-md object-cover" />
             ) : (
               <div className="grid size-[52px] place-items-center rounded-md bg-steel-soft text-sm font-semibold text-steel">{person.initials}</div>
             )}
             <div>
               <div className="text-base font-semibold tracking-tight">{person.name}</div>
-              <div className="mt-1 text-xs text-muted-foreground">{req?.desk ?? "YZI in-house"}</div>
+              {locked || person.lock === "placed" ? (
+                <div className="mt-1 text-xs text-muted-foreground">{person.lockedRecruiter} · {person.lockedAgency}</div>
+              ) : (
+                <div className="mt-1 text-xs text-muted-foreground">Not with a recruiter yet</div>
+              )}
               <div className="mt-0.5 text-xs font-medium">{req?.role ?? "Unassigned role"} · <span className="font-mono text-[11px] text-steel">{person.requirement}</span></div>
-              <div className="mt-1 font-mono text-[10px] tracking-widest text-muted-foreground">{person.id} · {person.column.toUpperCase()}</div>
+              <div className="mt-2 flex flex-wrap gap-2">
+                <Chip tone={person.lock === "vacant" ? "ok" : person.lock === "no_match" ? "signal" : "steel"}>{chip}</Chip>
+              </div>
             </div>
           </div>
           <button type="button" aria-label="Close" onClick={onClose} className="grid size-8 place-items-center rounded-md text-muted-foreground hover:bg-muted"><X className="size-4" /></button>
@@ -85,13 +96,19 @@ export function IdentityDrawer({
             <div className="text-sm text-signal">{person.phone}</div>
           </div>
 
+          <div className="rounded-md border border-dashed border-border px-4 py-3">
+            <div className="font-mono text-[10px] tracking-widest text-muted-foreground">ORIGIN · ADMIN ONLY</div>
+            <div className="mt-1.5 text-sm">{originLine(person)}</div>
+            <p className="mt-1 text-[11px] text-muted-foreground">Origin never changes. Only the lock moves.</p>
+          </div>
+
           <div className="grid grid-cols-2 gap-5">
             <Field label="CITY" value={person.city} />
             <Field label="EXPERIENCE" value={person.experience} />
             <Field label="CTC" value={person.ctc} />
             <Field label="NOTICE" value={person.notice} />
-            <Field label="ORIGIN" value={person.origin} />
             <Field label="CURRENT STEP" value={person.step} />
+            <Field label="LOCK" value={chip} />
           </div>
 
           <div>
@@ -111,7 +128,7 @@ export function IdentityDrawer({
         </div>
 
         <footer className="space-y-2 border-t border-border px-6 py-5">
-          {person.column === "Placed" ? (
+          {person.lock === "placed" ? (
             <>
               {showPlacement && person.placement && (
                 <div className="mb-3 space-y-2 rounded-md border border-border bg-muted/40 p-4">
@@ -130,16 +147,27 @@ export function IdentityDrawer({
               <Button className="w-full" onClick={() => action(`Offer file opened · ${person.name} · ${person.requirement}`)}>Open offer file</Button>
             </>
           ) : footer === "confirm" ? (
-            <div className="flex gap-2">
-              <Button className="flex-1" onClick={() => { action(`Email confirmed · ${person.name}`); onClose(); }}><Check className="size-4" /> Confirm email</Button>
-              <Button variant="outline" className="flex-1" onClick={() => { action(`${person.name} rejected from campaign`); onClose(); }}>Reject</Button>
-            </div>
+            mailed ? (
+              <div className="rounded-md bg-ok-soft px-3 py-2 text-[12px] text-ok">Email already confirmed for this hit.</div>
+            ) : (
+              <div className="flex gap-2">
+                <Button className="flex-1" onClick={() => { action(`Email confirmed · ${person.name}`); onClose(); }}><Check className="size-4" /> Confirm email</Button>
+                <Button variant="outline" className="flex-1" onClick={() => { action(`${person.name} rejected from campaign`); onClose(); }}>Reject</Button>
+              </div>
+            )
+          ) : locked ? (
+            <Button className="w-full" disabled><LockKeyhole className="size-4" /> Locked · {person.lockedAgency}</Button>
+          ) : person.lock === "no_match" ? (
+            <div className="rounded-md bg-muted px-3 py-2 text-[12px] text-muted-foreground">No match on this requirement. Parked for future briefs.</div>
           ) : (
             <>
-              <Button className="w-full" onClick={() => action(`Spec sent to recruiter · ${person.name} · ${person.requirement}`)}><Send className="size-4" /> Send spec to recruiter (contact hidden)</Button>
+              <Button className="w-full" disabled={sent} onClick={() => { setSent(true); action(`send_spec · ${person.name} → ${req?.recruiter ?? "recruiter"} · ${req?.agency ?? "agency"} · ${person.requirement} (audit written)`); }}>
+                <Send className="size-4" /> {sent ? `Sent · locked to ${req?.agency}` : `Send spec to ${req?.recruiter ?? "recruiter"} · ${req?.agency ?? "agency"} (${person.requirement})`}
+              </Button>
               {canShareDocs && (
                 <Button variant="outline" className="w-full" onClick={() => action(`Documents shared with recruiter · ${person.name}`)}><Share2 className="size-4" /> Share documents with recruiter</Button>
               )}
+              <p className="text-[11px] text-muted-foreground">Contact stays with YZI. Audit meta carries recruiter name, agency and REQ code.</p>
             </>
           )}
         </footer>
@@ -148,6 +176,7 @@ export function IdentityDrawer({
     </div>
   );
 }
+
 
 function PersonCard({ person, onClick }: { person: AdminPerson; onClick: () => void }) {
   return (
