@@ -176,7 +176,7 @@ function Stat({ label, value, note, tone = "neutral" }: { label: string; value: 
 
 function Overview({ portal, store, action, onSection, onRequirement }: { portal: Portal; store: ReturnType<typeof useDemoStore>; action: (message: string) => void; onSection: (section: Section) => void; onRequirement: () => void }) {
   if (portal === "candidate") return <CandidateHome store={store} onSection={onSection} />;
-  if (portal === "recruiter") return <RecruiterOverview store={store} onSection={onSection} action={action} onRequirement={onRequirement} />;
+  if (portal === "recruiter") return <RecruiterOverview onSection={onSection} onRequirement={onRequirement} />;
   return <AdminOverview store={store} onSection={onSection} action={action} />;
 }
 
