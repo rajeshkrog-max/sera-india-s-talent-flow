@@ -111,7 +111,25 @@ export function IdentityDrawer({
         </div>
 
         <footer className="space-y-2 border-t border-border px-6 py-5">
-          {footer === "confirm" ? (
+          {person.column === "Placed" ? (
+            <>
+              {showPlacement && person.placement && (
+                <div className="mb-3 space-y-2 rounded-md border border-border bg-muted/40 p-4">
+                  <div className="font-mono text-[10px] tracking-widest text-steel">PLACEMENT FILE · {person.requirement}</div>
+                  <Field label="PACKAGE" value={person.placement.package} />
+                  <Field label="TERMS" value={person.placement.terms} />
+                  <Field label="PLACED DATE" value={person.placement.placedDate} />
+                  <button type="button" onClick={() => action(`Audit row ${person.placement?.auditRef} opened · ${person.name}`)} className="font-mono text-[11px] text-signal underline underline-offset-4">Open audit row {person.placement.auditRef}</button>
+                </div>
+              )}
+              <Button className="w-full" onClick={() => { setShowPlacement((value) => !value); action(`Placement file opened · ${person.name}`); }}>{showPlacement ? "Hide placement file" : "Open placement file"}</Button>
+            </>
+          ) : person.column === "Offer" ? (
+            <>
+              <div className="mb-1 rounded-md bg-steel-soft/60 px-3 py-2 text-[12px] text-steel">{person.offerStatus ?? "Offer in progress."}</div>
+              <Button className="w-full" onClick={() => action(`Offer file opened · ${person.name} · ${person.requirement}`)}>Open offer file</Button>
+            </>
+          ) : footer === "confirm" ? (
             <div className="flex gap-2">
               <Button className="flex-1" onClick={() => { action(`Email confirmed · ${person.name}`); onClose(); }}><Check className="size-4" /> Confirm email</Button>
               <Button variant="outline" className="flex-1" onClick={() => { action(`${person.name} rejected from campaign`); onClose(); }}>Reject</Button>
@@ -125,6 +143,7 @@ export function IdentityDrawer({
             </>
           )}
         </footer>
+
       </aside>
     </div>
   );
