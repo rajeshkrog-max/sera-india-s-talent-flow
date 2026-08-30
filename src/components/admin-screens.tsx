@@ -5,15 +5,22 @@ import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import rahulPortrait from "@/assets/rahul-mehta.jpg";
 import {
+  adminApprovals,
   adminCampaigns,
   adminPool,
   adminRequirements,
   adminThreads,
   findPerson,
+  findRequirement,
+  lockChip,
+  originLine,
   poolColumns,
+  reqStatusLabel,
+  type AdminApproval,
   type AdminPerson,
 } from "@/lib/admin-data";
-import { ArrowLeft, Check, ChevronRight, LockKeyhole, Plus, Send, Share2, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, ChevronRight, LockKeyhole, Plus, Send, Share2, X } from "lucide-react";
+
 
 type Action = (message: string) => void;
 
