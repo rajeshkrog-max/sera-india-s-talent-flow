@@ -1,0 +1,12 @@
+export type Org = { id: string; name: string; kind: "yzi" | "recruiter" };
+export type User = { id: string; org_id: string; name: string; portal: "candidate" | "recruiter" | "admin" };
+export type Candidate = { id: string; user_id: string; city: string; expertise: string[]; status: string };
+export type Requirement = { id: string; recruiter_id: string; code: string; role: string; city: string; filed_at: string; status: string };
+export type Campaign = { id: string; owner_id: string; role: string; city: string; status: "running" | "ended" | "draft"; starts_at: string; ends_at: string };
+export type Hit = { id: string; campaign_id: string; candidate_id: string; match_reason: string; status: string };
+export type Spec = { id: string; requirement_id: string; role: string; city: string; skills: string[]; ctc: string };
+export type Workflow = { id: string; candidate_id: string; requirement_id: string; milestone: string; status: string };
+export type Message = { id: string; sender_id: string; recipient_id: string; body: string; read_at?: string };
+export type Document = { id: string; candidate_id: string; name: string; kind: string; status: string };
+export type IdentityRequest = { id: string; candidate_id: string; reason: string; status: string };
+export type AuditEvent = { id: string; actor_id: string; action: string; subject_id: string; created_at: string };
