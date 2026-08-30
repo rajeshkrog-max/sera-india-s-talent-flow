@@ -55,6 +55,8 @@ export function IdentityDrawer({
   footer?: "spec" | "confirm";
 }) {
   const canShareDocs = person.step === "Docs";
+  const req = adminRequirements.find((item) => item.id === person.requirement);
+  const [showPlacement, setShowPlacement] = useState(false);
   return (
     <div className="fixed inset-0 z-40 flex justify-end bg-foreground/25 backdrop-blur-[2px]" onClick={onClose}>
       <aside className="sera-rise flex h-full w-full max-w-[460px] flex-col border-l border-border bg-card" onClick={(event) => event.stopPropagation()}>
@@ -67,11 +69,14 @@ export function IdentityDrawer({
             )}
             <div>
               <div className="text-base font-semibold tracking-tight">{person.name}</div>
-              <div className="mt-1 font-mono text-[10px] tracking-widest text-muted-foreground">{person.id} · {person.requirement} · {person.column.toUpperCase()}</div>
+              <div className="mt-1 text-xs text-muted-foreground">{req?.desk ?? "YZI in-house"}</div>
+              <div className="mt-0.5 text-xs font-medium">{req?.role ?? "Unassigned role"} · <span className="font-mono text-[11px] text-steel">{person.requirement}</span></div>
+              <div className="mt-1 font-mono text-[10px] tracking-widest text-muted-foreground">{person.id} · {person.column.toUpperCase()}</div>
             </div>
           </div>
           <button type="button" aria-label="Close" onClick={onClose} className="grid size-8 place-items-center rounded-md text-muted-foreground hover:bg-muted"><X className="size-4" /></button>
         </header>
+
 
         <div className="flex-1 space-y-6 overflow-y-auto px-6 py-5">
           <div className="rounded-md bg-signal-soft p-4">
@@ -106,7 +111,25 @@ export function IdentityDrawer({
         </div>
 
         <footer className="space-y-2 border-t border-border px-6 py-5">
-          {footer === "confirm" ? (
+          {person.column === "Placed" ? (
+            <>
+              {showPlacement && person.placement && (
+                <div className="mb-3 space-y-2 rounded-md border border-border bg-muted/40 p-4">
+                  <div className="font-mono text-[10px] tracking-widest text-steel">PLACEMENT FILE · {person.requirement}</div>
+                  <Field label="PACKAGE" value={person.placement.package} />
+                  <Field label="TERMS" value={person.placement.terms} />
+                  <Field label="PLACED DATE" value={person.placement.placedDate} />
+                  <button type="button" onClick={() => action(`Audit row ${person.placement?.auditRef} opened · ${person.name}`)} className="font-mono text-[11px] text-signal underline underline-offset-4">Open audit row {person.placement.auditRef}</button>
+                </div>
+              )}
+              <Button className="w-full" onClick={() => { setShowPlacement((value) => !value); action(`Placement file opened · ${person.name}`); }}>{showPlacement ? "Hide placement file" : "Open placement file"}</Button>
+            </>
+          ) : person.column === "Offer" ? (
+            <>
+              <div className="mb-1 rounded-md bg-steel-soft/60 px-3 py-2 text-[12px] text-steel">{person.offerStatus ?? "Offer in progress."}</div>
+              <Button className="w-full" onClick={() => action(`Offer file opened · ${person.name} · ${person.requirement}`)}>Open offer file</Button>
+            </>
+          ) : footer === "confirm" ? (
             <div className="flex gap-2">
               <Button className="flex-1" onClick={() => { action(`Email confirmed · ${person.name}`); onClose(); }}><Check className="size-4" /> Confirm email</Button>
               <Button variant="outline" className="flex-1" onClick={() => { action(`${person.name} rejected from campaign`); onClose(); }}>Reject</Button>
@@ -120,6 +143,7 @@ export function IdentityDrawer({
             </>
           )}
         </footer>
+
       </aside>
     </div>
   );
@@ -376,9 +400,15 @@ export function AdminRequirementsScreen({ action }: { action: Action }) {
   );
 }
 
+const seraStages = ["Profile", "Sent", "Meeting", "Docs", "Interview", "Offer", "Placed"];
+
 export function AdminSeraControl({ action }: { action: Action }) {
   const [selected, setSelected] = useState<string | null>(null);
+  const [stageOverride, setStageOverride] = useState<Record<string, string>>({});
   const person = selected ? findPerson(selected) : undefined;
+  const currentStage = person ? (stageOverride[person.id] ?? (seraStages.includes(person.step) ? person.step : "Profile")) : "Profile";
+  const currentIndex = seraStages.indexOf(currentStage);
+  const nextStage = seraStages[currentIndex + 1];
   return (
     <div className="space-y-5">
       <Heading eyebrow="YZI ADMIN · SERA CONTROL" title="Sera is powerful because YZI is the lock." description="Pick the person first. Only then does an action unlock, and only that action is logged." />
@@ -403,15 +433,26 @@ export function AdminSeraControl({ action }: { action: Action }) {
                 <div className="grid size-10 place-items-center rounded-md bg-signal-soft text-signal"><LockKeyhole className="size-5" /></div>
                 <div>
                   <div className="text-sm font-semibold">{person.name}</div>
-                  <div className="font-mono text-[10px] tracking-widest text-muted-foreground">{person.id} · {person.requirement} · STEP {person.step.toUpperCase()}</div>
+                  <div className="font-mono text-[10px] tracking-widest text-muted-foreground">{person.id} · {person.requirement} · STEP {currentStage.toUpperCase()}</div>
                 </div>
               </div>
               <p className="mt-4 text-sm leading-relaxed text-muted-foreground">{person.seraNote}</p>
               <div className="mt-6 space-y-2">
                 <Button className="w-full" onClick={() => action(`Spec sent to recruiter · ${person.name}`)}><Send className="size-4" /> Send spec to recruiter (contact hidden)</Button>
                 <Button variant="outline" className="w-full" onClick={() => action(`Documents shared with recruiter · ${person.name}`)}><Share2 className="size-4" /> Share documents with recruiter</Button>
-                <Button variant="outline" className="w-full" onClick={() => action(`Next stage unlocked for ${person.name}`)}><LockKeyhole className="size-4" /> Unlock next stage</Button>
               </div>
+              <div className="mt-6 rounded-md border border-border bg-muted/30 p-4">
+                <div className="font-mono text-[10px] tracking-widest text-muted-foreground">UNLOCK · STAGES</div>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {seraStages.map((stage, index) => (
+                    <span key={stage} className={cn("rounded-full px-2.5 py-1 text-[11px] font-medium", index === currentIndex ? "bg-signal-soft text-signal ring-1 ring-signal" : index < currentIndex ? "bg-ok-soft text-ok" : "bg-steel-soft/60 text-muted-foreground")}>{stage}</span>
+                  ))}
+                </div>
+                <Button variant="outline" className="mt-4 w-full" disabled={!nextStage} onClick={() => { if (!nextStage) return; setStageOverride((map) => ({ ...map, [person.id]: nextStage })); action(`${person.name} unlocked to ${nextStage}`); }}>
+                  <LockKeyhole className="size-4" /> {nextStage ? `Unlock ${nextStage}` : "Final stage reached"}
+                </Button>
+              </div>
+
               <p className="mt-4 text-[11px] text-muted-foreground">Every action here writes one insert-only audit row.</p>
             </>
           ) : (
