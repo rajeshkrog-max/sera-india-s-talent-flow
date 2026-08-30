@@ -185,7 +185,7 @@ function JobPanel({ invite, onClose, action }: { invite: JobInvite; onClose: () 
 export function CandidateProgress({ action }: { action: Action }) {
   const store = useCandidateStore();
   const [ask, setAsk] = useState(false);
-  const [milestone, setMilestone] = useState<CandidateStage>(candidateStages[store.stepIndex] ?? "Profile");
+  
   const [body, setBody] = useState("");
   const current = store.stepIndex;
   const currentStage = candidateStages[current] ?? "Profile";
@@ -268,10 +268,10 @@ export function CandidateProgress({ action }: { action: Action }) {
       )}
 
       {ask && (
-        <Modal title="Ask Sera" subtitle="Pick the milestone and tell us what is stuck. It reaches YZI Admin." onClose={() => setAsk(false)}>
+        <Modal title="Ask Sera" subtitle="Only your current milestone can be raised here. It reaches YZI Admin." onClose={() => setAsk(false)}>
           <label className="block text-xs font-medium">Milestone
-            <select value={milestone} onChange={(event) => setMilestone(event.target.value as CandidateStage)} className="mt-2 h-9 w-full rounded-md border border-border bg-background px-3 text-sm">
-              {candidateStages.map((stage) => <option key={stage} value={stage}>{stage}</option>)}
+            <select value={currentStage} disabled className="mt-2 h-9 w-full cursor-not-allowed rounded-md border border-border bg-muted px-3 text-sm opacity-70">
+              <option value={currentStage}>{currentStage}</option>
             </select>
           </label>
           <label className="block text-xs font-medium">What is the problem?
@@ -279,7 +279,7 @@ export function CandidateProgress({ action }: { action: Action }) {
           </label>
           <div className="flex justify-end gap-2 pt-1">
             <Button variant="outline" onClick={() => setAsk(false)}>Cancel</Button>
-            <Button disabled={!body.trim()} onClick={() => { candidateStore.addGrievance(milestone, body.trim(), reqId); setBody(""); setAsk(false); action(`Sent to YZI Admin · problem at ${milestone} · ${reqId}`); }}>Send to Sera</Button>
+            <Button disabled={!body.trim()} onClick={() => { candidateStore.addGrievance(currentStage, body.trim(), reqId); setBody(""); setAsk(false); action(`Sent to YZI Admin · problem at ${currentStage} · ${reqId}`); }}>Send to Sera</Button>
           </div>
         </Modal>
       )}
