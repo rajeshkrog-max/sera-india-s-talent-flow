@@ -18,6 +18,7 @@ import {
   poolColumns,
   reqStatusLabel,
   type AdminPerson,
+  type AdminThread,
 } from "@/lib/admin-data";
 import { tagLabel, useRecruiterStore } from "@/lib/recruiter-store";
 import { ArrowLeft, ArrowRight, Check, ChevronRight, LockKeyhole, Plus, Send, Share2, X } from "lucide-react";
