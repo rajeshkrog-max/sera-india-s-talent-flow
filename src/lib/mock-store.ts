@@ -89,5 +89,9 @@ export function useDemoStore() {
 }
 
 export function getSelectedCandidate(id: string) {
-  return candidates.find((candidate) => candidate.id === id) ?? candidates[0];
+  const candidate = candidates.find((item) => item.id === id);
+  if (candidate) return candidate;
+  const firstCandidate = candidates.at(0);
+  if (!firstCandidate) throw new Error("Demo candidate pool is empty");
+  return firstCandidate;
 }
