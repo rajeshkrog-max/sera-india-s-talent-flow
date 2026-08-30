@@ -78,12 +78,19 @@ export function SeraApp({ initialPortal = "admin" }: { initialPortal?: Portal })
   const [section, setSection] = useState<Section>(initialPortal === "admin" ? "overview" : "overview");
   const [showRequirementForm, setShowRequirementForm] = useState(false);
   const [showCampaignForm, setShowCampaignForm] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [toast, setToast] = useState("");
+  const navigate = useNavigate();
   const store = useDemoStore();
 
   const action = (message: string) => {
     setToast(message);
     window.setTimeout(() => setToast(""), 2600);
+  };
+
+  const logout = () => {
+    setShowLogoutConfirm(false);
+    navigate({ to: "/" });
   };
 
   return (
