@@ -146,12 +146,12 @@ export const candidateStore = {
   },
   applyInvite(id: string) {
     const invite = state.invites.find((item) => item.id === id);
-    set({
-      invites: state.invites.map((item) => (item.id === id ? { ...item, status: "applied" } : item)),
-      stepIndex: Math.max(state.stepIndex, 2),
-      stepDates: { ...state.stepDates, Sent: now() },
-    });
+    set({ invites: state.invites.map((item) => (item.id === id ? { ...item, status: "applied" } : item)) });
     return invite;
+  },
+  sendSpec(reqId: string) {
+    set({ stepIndex: Math.max(state.stepIndex, 2), stepDates: { ...state.stepDates, Sent: now() }, stepAgeDays: { ...state.stepAgeDays, Sent: 0 } });
+    return reqId;
   },
   rejectInvite(id: string) {
     set({ invites: state.invites.map((item) => (item.id === id ? { ...item, status: "rejected" } : item)) });

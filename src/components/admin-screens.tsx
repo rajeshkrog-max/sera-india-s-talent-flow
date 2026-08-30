@@ -127,6 +127,8 @@ export function IdentityDrawer({
             <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{person.matchReason}</p>
           </div>
 
+          <CandidateFeedbackSlider personName={person.name} action={action} />
+
           <div className="rounded-md border border-border bg-muted/40 p-4">
             <div className="font-mono text-[10px] tracking-widest text-steel">SERA NOTE</div>
             <p className="mt-2 text-sm leading-relaxed">{person.seraNote}</p>
@@ -218,6 +220,7 @@ export function AdminPoolBoard({ action, reqFilter }: { action: Action; reqFilte
       >
         <div className="rounded-md bg-steel-soft px-3 py-2 font-mono text-[10px] tracking-wide text-steel">POOL FIRST · CAMPAIGN IF THIN</div>
       </Heading>
+      <AppliedStrip action={action} />
       <div className="grid gap-4 md:grid-cols-3 xl:grid-cols-6">
         {poolColumns.map((column) => {
           const columnPeople = people.filter((person) => person.column === column);
@@ -241,6 +244,60 @@ export function AdminPoolBoard({ action, reqFilter }: { action: Action; reqFilte
         })}
       </div>
       {open && <IdentityDrawer person={open} onClose={() => setOpenId(null)} action={action} />}
+    </div>
+  );
+}
+
+function AppliedStrip({ action }: { action: Action }) {
+  const store = useCandidateStore();
+  const applied = store.invites.filter((invite) => invite.status === "applied");
+  if (applied.length === 0) return null;
+  return (
+    <div className="rounded-lg border border-signal/40 bg-signal-soft/50 p-4">
+      <div className="font-mono text-[10px] tracking-widest text-signal">APPLIED FROM CANDIDATE DESK</div>
+      <div className="mt-3 space-y-2">
+        {applied.map((invite) => (
+          <div key={invite.id} className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-border bg-card px-4 py-3">
+            <div>
+              <div className="text-sm font-medium">Applied · {store.profile.identity.name} · {invite.reqId}</div>
+              <div className="mt-1 text-xs text-muted-foreground">{invite.role} · {invite.city}</div>
+            </div>
+            <Button size="sm" onClick={() => { candidateStore.sendSpec(invite.reqId); action(`send_spec · ${store.profile.identity.name} → Priya Shah · Eventrics · ${invite.reqId} (audit written)`); }}>
+              <Send className="size-3.5" /> Send spec to Priya Shah · Eventrics
+            </Button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function CandidateFeedbackSlider({ personName, action }: { personName: string; action: Action }) {
+  const store = useCandidateStore();
+  const [open, setOpen] = useState(false);
+  if (store.feedback.length === 0) return null;
+  return (
+    <div className="rounded-md border border-border p-4">
+      <button type="button" onClick={() => setOpen((value) => !value)} className="flex w-full items-center justify-between gap-2">
+        <span className="font-mono text-[10px] tracking-widest text-steel">FEEDBACK · {store.feedback.length}</span>
+        <span className="text-[11px] text-muted-foreground">{open ? "Hide" : "Open feedback slider"}</span>
+      </button>
+      {open && (
+        <div className="mt-3 space-y-3">
+          {store.feedback.map((item) => (
+            <div key={item.id} className="rounded-md bg-muted/40 p-3">
+              <div className="flex items-center justify-between gap-2">
+                <span className="font-mono text-[10px] tracking-widest text-muted-foreground">{item.about === "yzi" ? "ABOUT YZI" : `EMPLOYER · ${item.employerName}`}</span>
+                <Chip tone={item.status === "accepted" ? "ok" : "signal"}>{item.status === "accepted" ? "Received and reviewed" : "Under review"}</Chip>
+              </div>
+              <p className="mt-2 text-xs leading-relaxed text-muted-foreground">{item.body}</p>
+              {item.status === "under_review" && (
+                <Button size="sm" variant="outline" className="mt-3" onClick={() => { candidateStore.acceptFeedback(item.id, "Thank you — reviewed by YZI."); action(`Feedback accepted · ${personName}`); }}>Accept feedback</Button>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
